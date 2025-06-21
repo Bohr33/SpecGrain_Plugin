@@ -133,18 +133,14 @@ bool SpecGrainAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     pv.process(buffer);
     
-    for (int channel = 1; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        auto* channelOne = buffer.getReadPointer(0);
-        
-        juce::FloatVectorOperations::copy(channelData, channelOne, buffer.getNumSamples());
-    }
+//    auto* channel2 = buffer.getWritePointer (1);
+//    auto* channel1 = buffer.getReadPointer(0);
+//
+//    juce::FloatVectorOperations::copy(channel2, channel1, buffer.getNumSamples());
+
 }
 
 //==============================================================================

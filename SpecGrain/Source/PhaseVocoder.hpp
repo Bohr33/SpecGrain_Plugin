@@ -62,9 +62,6 @@ public:
     PhaseVocoder()
     {
         
-        
-        
-        
     }
     
     void prepare(size_t buffSize, double sampleRate)
@@ -80,6 +77,10 @@ public:
         fftBuffer.resize(fftSize);
         magPhasePairs.resize(fftSize);
         windowedBuffer.resize(fftSize);
+        complexProcessBuffer.resize(fftSize);
+        
+        prevPhase.resize(fftSize/2);
+        fsig.resize(fftSize);
         
         overlapBuffer.resize(fftSize * 2);
         bufferFull = false;
@@ -115,7 +116,7 @@ public:
             inputBufferHead = inputBufferHead % inputBuffer.size();
             
             sampsAccumulated += hopSize;
-            if(sampsAccumulated >= inputBuffer.size())
+            if(sampsAccumulated >= fftSize)
                 bufferFull = true;
             
             //Once buffer is full, begin actual processing loop
@@ -126,36 +127,50 @@ public:
                 return;
             }
             
+            auto index = (inputBufferHead + fftSize - hopSize) % fftSize;
             //Apply window
+            
             for(int i = 0; i < inputBuffer.size(); ++i)
             {
-                windowedBuffer[i] = window.interpVal(static_cast<float>(i)/fftSize) * inputBuffer[i];
+                auto readIndex = (index + i) % fftSize;
+                windowedBuffer[i] = window.interpVal(static_cast<float>(i)/fftSize) * inputBuffer[readIndex];
             }
+            
             
             
             fftObject->performRealOnlyForwardTransform(windowedBuffer.data(), true);
             
-            getMagnitudePhase(windowedBuffer, magPhasePairs);
+            
+//            getMagnitudePhase(windowedBuffer, magPhasePairs);
+            getFsig(windowedBuffer, fsig);
+            
             
             //Process in between here
+//            pitchShift(1.3333, fsig, complexProcessBuffer);
             
-            getRealImag(magPhasePairs, outputBuffer);
+            resynthesizeFsig(fsig, outputBuffer);
+//            getRealImag(complexProcessBuffer, outputBuffer);
+            
+//            juce::FloatVectorOperations::copy(outputBuffer.data(), windowedBuffer.data(), fftSize);
+            
             
             fftObject->performRealOnlyInverseTransform(outputBuffer.data());
             
+            juce::FloatVectorOperations::clear(windowedBuffer.data(), fftSize);
+            
             //Apply window again
-            for(int i = 0; i < inputBuffer.size(); ++i)
+            for(int i = 0; i < fftSize; ++i)
             {
-                windowedBuffer[i] = window.interpVal(static_cast<float>(i)/outputBuffer.size()) * outputBuffer[i];
+                windowedBuffer[i] = window.interpVal(static_cast<float>(i)/fftSize) * outputBuffer[i];
             }
+            
+
             
             
             //Write output to overlap buffer
             for(auto i = 0; i < fftSize; ++i)
             {
-                auto index = i + overlapWritePos;
-                index = index % static_cast<int>(fftSize);
-                
+                auto index = (i + overlapWritePos) % overlapBuffer.size();
                 overlapBuffer[index] += windowedBuffer[i];
             }
             overlapWritePos += hopSize;
@@ -163,16 +178,19 @@ public:
         }
         
         //read next data and clear read portion
-        auto* bufPointer = buffer.getWritePointer(0);
-        
+    
         for(auto i = 0; i < buffer.getNumSamples(); ++i)
         {
-            bufPointer[i] = overlapBuffer[i + overlapReadPos];
-            overlapBuffer[i + overlapReadPos] = 0;
+            auto index = (i + overlapReadPos) % overlapBuffer.size();
+            buffer.addSample(0, i, overlapBuffer[index]);
+            buffer.addSample(1, i, overlapBuffer[index]);
+            overlapBuffer[index] = 0;
         }
         
         overlapReadPos += bufferSize;
         overlapReadPos %= overlapBuffer.size();
+        
+        test++;
     }
     
     
@@ -193,19 +211,100 @@ public:
     
     void getRealImag(std::vector<float>& magPhase, std::vector<float>& complexPairs)
     {
-        const static size_t numBins = complexPairs.size()/2;
+        const static size_t numBins = fftSize/2;
         //magPhase.resize(complexPairs.size());
         
         for(size_t i = 0; i < numBins; ++i)
         {
-            auto mag = complexPairs[i * 2];
-            auto phase = complexPairs[i * 2 +1];
+            auto mag = magPhase[i * 2];
+            auto phase = magPhase[i * 2 +1];
             
-            magPhase[i * 2] = mag * std::cos(phase);
-            magPhase[i * 2 + 1] = mag * std::sin(phase);
+            complexPairs[i * 2] = mag * std::cos(phase);
+            complexPairs[i * 2 + 1] = mag * std::sin(phase);
         }
     }
     
+    void pitchShift(double shiftAmt, std::vector<float>& magPhaseData, std::vector<float>& processedMagPhase)
+    {
+        
+        auto numBins = (fftSize) / 2;
+        
+        juce::FloatVectorOperations::clear(processedMagPhase.data(), fftSize);
+        processedMagPhase[0] = magPhaseData[0];
+        processedMagPhase[1] = magPhaseData[1];
+        
+        //Ignore DC and Nyquist bins for now
+        for(int i = 1; i < numBins; ++i)
+        {
+            auto newBin = juce::roundToInt(shiftAmt * i);
+            if(newBin >= numBins)
+                break;
+            auto magIndex = newBin * 2;
+            auto phaseIndex = magIndex + 1;
+            //Shift Magnitude Values
+            processedMagPhase[magIndex] = magPhaseData[i * 2];
+
+            //Shift Phase Values
+            processedMagPhase[phaseIndex] = shiftAmt * magPhaseData[i * 2 + 1];
+        }
+    }
+    
+    
+    void getFsig(std::vector<float>& fftData, std::vector<float>& dest)
+    {
+        auto numBins = fftSize / 2;
+        auto twoPi = juce::MathConstants<float>::twoPi;
+        auto pi = juce::MathConstants<float>::pi;
+        
+        //Store DC and Nyquist as is
+        dest[0] = fftData[0];
+        dest[1] = fftData[1];
+        
+        for(int i = 1; i < numBins; ++i)
+        {
+            auto expectedPhase = twoPi * i * hopSize/fftSize;
+            
+            auto real = fftData[i * 2];
+            auto imag = fftData[i * 2 +1];
+            
+            auto mag = std::sqrt(real * real + imag * imag);
+            auto phase = std::atan2(imag, real);
+            
+            auto phaseDelta = phase - prevPhase[i];
+            prevPhase[i] = phase;
+            
+            phaseDelta -= expectedPhase;
+            phaseDelta = std::fmod(phaseDelta + pi, twoPi);
+            
+            //instantaneous Frequency in radians per sample
+            auto instantFreq = expectedPhase + phaseDelta / hopSize;
+            
+            fsig[i] = mag;
+            fsig[i + 1] = instantFreq;
+        }
+    }
+    
+    void resynthesizeFsig(std::vector<float>& fsig, std::vector<float>& dest)
+    {
+        auto numBins = fftSize / 2;
+        
+        //Store DC and Nyquist as is
+        dest[0] = fsig[0];
+        dest[1] = fsig[1];
+        
+        for(int i = 1; i < numBins; ++i)
+        {
+            auto mag = fsig[i];
+            auto instFreq = fsig[i + 1];
+            float newPhase = prevPhase[i] + instFreq * hopSize;
+            
+            auto real = mag * std::cos(newPhase);
+            auto imag = mag * std::sin(newPhase);
+            
+            dest[i] = real;
+            dest[i + 1] = imag;
+        }
+    }
     
     
     
@@ -217,6 +316,8 @@ private:
     size_t hopsPerBlock;
     int sampsAccumulated = 0;
     
+    unsigned long test = 0;
+    
     std::unique_ptr<juce::dsp::FFT> fftObject;
     
     unsigned int inputBufferHead;
@@ -225,7 +326,10 @@ private:
     std::vector<float> fftBuffer;
     std::vector<float> magPhasePairs;
     std::vector<float> windowedBuffer;
+    std::vector<float> complexProcessBuffer;
     
+    std::vector<float> prevPhase;
+    std::vector<float> fsig;
     
     unsigned int overlapReadPos = 0;
     unsigned int overlapWritePos = 0;
