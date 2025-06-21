@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "PhaseVocoder.hpp"
 
 //==============================================================================
 /**
@@ -54,6 +55,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
+    PhaseVocoder pv;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessor)
 };
