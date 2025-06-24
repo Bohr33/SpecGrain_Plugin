@@ -59,8 +59,8 @@ public:
         ifftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
         
         inputBuffer.resize(fftSize);
-        fftInputBuffer.resize(fftSize);
-        fftOutputBuffer.resize(fftSize);
+        fftInputBuffer.resize(fftSize*2);
+        fftOutputBuffer.resize(fftSize*2);
         
         lastInputPhase.resize(fftSize/2);
         lastOutputPhase.resize(fftSize/2);
@@ -97,7 +97,7 @@ public:
                 return;
             
             
-            //Apply window
+            //Apply window and pass to larger array
             for(int i = 0; i < fftSize; ++i)
             {
                 auto readIndex = (inputBufferHead + i) % fftSize;
@@ -109,7 +109,7 @@ public:
             
             
             //Perform FFT, and phase vocoder transform, apply processing and return
-            fftObject->performRealOnlyForwardTransform(fftInputBuffer.data(), false);
+            fftObject->performRealOnlyForwardTransform(fftInputBuffer.data(), true);
         
             getFsig(fftInputBuffer);
             
@@ -189,36 +189,30 @@ public:
     
     void pitchShift(float shiftAmt, std::vector<float>& fsigIn, std::vector<float>& destination)
     {
-        auto numBins = (fftSize) / 2;
-        
-        juce::FloatVectorOperations::clear(destination.data(), fftSize);
+        juce::FloatVectorOperations::clear(destination.data(), destination.size());
         
         //Ignore DC and Nyquist bins for now
         for(int bin = 0; bin < numBins; bin++)
         {
             int newBin = juce::roundToInt(shiftAmt * bin);
-            if(newBin >= numBins)
-                break;
+            
             auto magIndex = newBin * 2;
             auto freqIndex = magIndex + 1;
-            //Shift Magnitude Values
-            destination[magIndex] += fsigIn[bin * 2];
 
-            //Shift Freq Values
-            destination[freqIndex] = shiftAmt * fsigIn[bin * 2 + 1];
+            if(newBin < numBins)
+            {
+                destination[magIndex] += fsigIn[bin * 2];
+                destination[freqIndex] = shiftAmt * fsigIn[bin * 2 + 1];
+            }
+
         }
     }
     
     void getFsig(std::vector<float>& fftData, std::vector<float>& dest)
     {
-        auto numBins = fftSize / 2;
         auto twoPi = juce::MathConstants<float>::twoPi;
         
-        //Store DC and Nyquist as is
-        dest[0] = fftData[0];
-        dest[1] = fftData[1];
-        
-        for(int i = 1; i < numBins; ++i)
+        for(int i = 0; i < numBins - 1; ++i)
         {
             auto real = fftData[i * 2];
             auto imag = fftData[i * 2 + 1];
@@ -258,28 +252,21 @@ public:
     
     void resynthesizeFsig(std::vector<float>& source, std::vector<float>& dest)
     {
-        auto numBins = fftSize / 2;
-        
-        //Store DC and Nyquist as is
-        dest[0] = source[0];
-        dest[1] = source[1];
-        
         auto twoPi = juce::MathConstants<float>::twoPi;
-        
-        for(int i = 0; i < numBins; ++i)
+        for(int i = 0; i < numBins - 1; ++i)
         {
             auto mag = source[i * 2];
             auto freq = source[i * 2 + 1];
             
             float binDeviation = freq - i;
             
-            float phaseDelta = binDeviation * twoPi * (float)hopSize / (float)fftSize;
+            float phaseIncrement = binDeviation * twoPi * (float)hopSize / (float)fftSize;
             
             float binCenterFreq = twoPi * (float)i / (float)fftSize;
             
-            phaseDelta += binCenterFreq * hopSize;
+            phaseIncrement += binCenterFreq * hopSize;
             
-            float outPhase = wrapPhase(phaseDelta + lastOutputPhase[i]);
+            float outPhase = wrapPhase(phaseIncrement + lastOutputPhase[i]);
             lastOutputPhase[i] = outPhase;
             
             auto real = mag * std::cos(outPhase);
@@ -322,6 +309,7 @@ private:
     size_t fftSize = 1024;
     size_t hopSize = fftSize / 8;
     size_t hopsPerBlock;
+    size_t numBins = fftSize / 2 + 1;
     float scaleFactor = 0.5;
     int sampsAccumulated = 0;
     
