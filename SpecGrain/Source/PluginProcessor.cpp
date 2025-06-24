@@ -19,9 +19,11 @@ SpecGrainAudioProcessor::SpecGrainAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+            parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
+    pv = std::make_unique<PhaseVocoder>(parameters);
 }
 
 SpecGrainAudioProcessor::~SpecGrainAudioProcessor()
@@ -29,6 +31,8 @@ SpecGrainAudioProcessor::~SpecGrainAudioProcessor()
 }
 
 //==============================================================================
+
+
 const juce::String SpecGrainAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -95,7 +99,7 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    pv.prepare(samplesPerBlock, sampleRate);
+    pv->prepare(samplesPerBlock, sampleRate);
 }
 
 void SpecGrainAudioProcessor::releaseResources()
@@ -134,7 +138,7 @@ void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 {
     juce::ScopedNoDenormals noDenormals;
 
-    pv.process(buffer);
+    pv->process(buffer);
     
 //    auto* channel2 = buffer.getWritePointer (1);
 //    auto* channel1 = buffer.getReadPointer(0);
@@ -151,7 +155,7 @@ bool SpecGrainAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* SpecGrainAudioProcessor::createEditor()
 {
-    return new SpecGrainAudioProcessorEditor (*this);
+    return new SpecGrainAudioProcessorEditor (*this, parameters);
 }
 
 //==============================================================================
@@ -166,6 +170,18 @@ void SpecGrainAudioProcessor::setStateInformation (const void* data, int sizeInB
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::createParameterLayout()
+{
+    int versionHint = 1;
+    
+    using namespace juce;
+    
+    return
+    {
+        std::make_unique<AudioParameterFloat>(ParameterID {"pitchShift", versionHint}, "Pitch Shift", 0.0f, 3.0f, 1.0f)
+    };
 }
 
 //==============================================================================

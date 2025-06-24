@@ -17,7 +17,7 @@
 class SpecGrainAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    SpecGrainAudioProcessorEditor (SpecGrainAudioProcessor&);
+    SpecGrainAudioProcessorEditor (SpecGrainAudioProcessor&, juce::AudioProcessorValueTreeState& vts);
     ~SpecGrainAudioProcessorEditor() override;
 
     //==============================================================================
@@ -28,6 +28,11 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     SpecGrainAudioProcessor& audioProcessor;
+    juce::AudioProcessorValueTreeState& valueTreeState;
+    
+    juce::Slider pitchSlider;
+    juce::Label  pitchSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchSliderAttch;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessorEditor)
 };

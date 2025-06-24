@@ -16,7 +16,7 @@
 class Window
 {
 public:
-    Window()
+    Window(size_t size) : windowSize(size)
     {
         window.resize(windowSize);
         makeWindow();
@@ -28,45 +28,24 @@ public:
             window[i] = 0.5 * (1 - std::cos((juce::MathConstants<double>::twoPi * i)/(windowSize-1)));
     }
     
-    float interpVal(float index)
-    {
-        index = fmod(index, 1.0);
-        if(index < 0) index += 1;
-        
-        float fi = index * windowSize;
-        
-        int i0 = fi;
-        int i1 = fi + 1 >= windowSize ? 0 : fi + 1;
-        
-        float floatDiff = fi - (float) i0;
-        
-        float low = window[i0];
-        float high = window[i1];
-        
-        float diff = high - low;
-        
-        return low + (diff * floatDiff);
-    }
-    
     float getRawValue(unsigned int index)
     {
         return window[index];
     }
     
 private:
-    
-    size_t windowSize = 1024;
+    size_t windowSize;
     std::vector<float> window;
 };
 
 
 
-class PhaseVocoder
+class PhaseVocoder : juce::AudioProcessorValueTreeState::Listener
 {
 public:
-    PhaseVocoder()
+    PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : window(fftSize), valueTreeState(vts)
     {
-        
+        valueTreeState.addParameterListener("pitchShift", this);
     }
     
     void prepare(size_t buffSize, double sampleRate)
@@ -80,20 +59,14 @@ public:
         ifftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
         
         inputBuffer.resize(fftSize);
-        outputBuffer.resize(fftSize);
         fftInputBuffer.resize(fftSize);
         fftOutputBuffer.resize(fftSize);
-        magPhasePairs.resize(fftSize);
-        windowedBuffer.resize(fftSize);
-        complexProcessBuffer.resize(fftSize);
         
+        lastInputPhase.resize(fftSize/2);
+        lastOutputPhase.resize(fftSize/2);
         
-        prevPhase.resize(fftSize/2);
-        outputPhase.resize(fftSize/2);
-        fsig.resize(fftSize);
-        
-        prevPhase.clear();
-        outputPhase.clear();
+        lastInputPhase.clear();
+        lastOutputPhase.clear();
         
         overlapBuffer.resize(fftSize * 2);
         bufferFull = false;
@@ -108,27 +81,12 @@ public:
     
     void process(juce::AudioBuffer<float>& buffer)
     {
-        
-        //1. Read in input, copy to buffer
-        //2. once buffer is full, perform windowing and FFT
-        //3. Store fft somehwhere
-        //4. Move forward by hopsize
-        //repeat
-        
-        
         //Perform stft operation for as many hop sizes
         //within 1 buffersize
         for(auto hop = 0; hop < hopsPerBlock; ++hop)
         {
-            
             //Copy hopSize buffer samples to larger buffer for FFT processing
             juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.getReadPointer(0) + hop * hopSize, hopSize);
-            
-            
-            buffer.clear(hop * static_cast<int>(hopSize), static_cast<int>(hopSize));
-            
-            inputBufferHead += hopSize;
-            inputBufferHead = inputBufferHead % inputBuffer.size();
             
             sampsAccumulated += hopSize;
             if(sampsAccumulated >= fftSize)
@@ -138,52 +96,42 @@ public:
             if(!bufferFull)
                 return;
             
-            auto index = ((inputBufferHead + fftSize) - hopSize) % fftSize;
-            //Apply window
             
+            //Apply window
             for(int i = 0; i < fftSize; ++i)
             {
-                auto readIndex = (index + i) % fftSize;
+                auto readIndex = (inputBufferHead + i) % fftSize;
                 fftInputBuffer[i] = window.getRawValue(i) * inputBuffer[readIndex];
             }
             
+            inputBufferHead += hopSize;
+            inputBufferHead %= inputBuffer.size();
             
-            //From here, arrays are sized fftSize * 2
+            
+            //Perform FFT, and phase vocoder transform, apply processing and return
             fftObject->performRealOnlyForwardTransform(fftInputBuffer.data(), false);
-            
         
-            getFsig(fftInputBuffer, fftOutputBuffer);
-            //Process in between here
-//            pitchShift(1.3333, fsig, complexProcessBuffer);
+            getFsig(fftInputBuffer);
             
-            resynthesizeFsig(fftOutputBuffer, outputBuffer);
-
-//            juce::FloatVectorOperations::copy(outputBuffer.data(), fsig.data(), fftSize);
+            float pShift = pitchShiftAmt.load();
+            //Process in Spectral Domain Here
+            pitchShift(pShift, fftInputBuffer, fftOutputBuffer);
             
-            ifftObject->performRealOnlyInverseTransform(outputBuffer.data());
+            resynthesizeFsig(fftOutputBuffer);
             
-//            juce::FloatVectorOperations::clear(windowedBuffer.data(), fftSize);
+            ifftObject->performRealOnlyInverseTransform(fftOutputBuffer.data());
             
-            //Apply window again
+            
+            //Apply window on output
             for(int i = 0; i < fftSize; ++i)
-            {
-                windowedBuffer[i] = window.getRawValue(i) * outputBuffer[i];
-            }
-            
+                fftOutputBuffer[i] = window.getRawValue(i) * fftOutputBuffer[i];
 
-            
-            
-            //Write output to overlap buffer
-            for(auto i = 0; i < fftSize; ++i)
-            {
-                auto index = (i + overlapWritePos) % overlapBuffer.size();
-                overlapBuffer[index] += windowedBuffer[i];
-            }
-            overlapWritePos += hopSize;
-            overlapWritePos %= overlapBuffer.size();
+            //Add newest data to overlap buffer
+            addDataToOverlap(fftOutputBuffer);
         }
         
         //read next data and clear read portion
+        buffer.clear();
     
         for(auto i = 0; i < buffer.getNumSamples(); ++i)
         {
@@ -195,8 +143,17 @@ public:
         
         overlapReadPos += bufferSize;
         overlapReadPos %= overlapBuffer.size();
-        
-        test++;
+    }
+    
+    void addDataToOverlap(std::vector<float>& dataToWrite)
+    {
+        for(auto i = 0; i < fftSize; ++i)
+        {
+            auto index = (i + overlapWritePos) % overlapBuffer.size();
+            overlapBuffer[index] += dataToWrite[i];
+        }
+        overlapWritePos += hopSize;
+        overlapWritePos %= overlapBuffer.size();
     }
     
     
@@ -230,31 +187,27 @@ public:
         }
     }
     
-    void pitchShift(double shiftAmt, std::vector<float>& fsigIn, std::vector<float>& destination)
+    void pitchShift(float shiftAmt, std::vector<float>& fsigIn, std::vector<float>& destination)
     {
-        
         auto numBins = (fftSize) / 2;
         
         juce::FloatVectorOperations::clear(destination.data(), fftSize);
-        destination[0] = fsigIn[0];
-        destination[1] = fsigIn[1];
         
         //Ignore DC and Nyquist bins for now
-        for(int i = 1; i < numBins; ++i)
+        for(int bin = 0; bin < numBins; bin++)
         {
-            auto newBin = juce::roundToInt(shiftAmt * i);
+            int newBin = juce::roundToInt(shiftAmt * bin);
             if(newBin >= numBins)
                 break;
             auto magIndex = newBin * 2;
-            auto phaseIndex = magIndex + 1;
+            auto freqIndex = magIndex + 1;
             //Shift Magnitude Values
-            destination[magIndex] = fsigIn[i * 2];
+            destination[magIndex] += fsigIn[bin * 2];
 
-            //Shift Phase Values
-            destination[phaseIndex] = shiftAmt * fsigIn[i * 2 + 1];
+            //Shift Freq Values
+            destination[freqIndex] = shiftAmt * fsigIn[bin * 2 + 1];
         }
     }
-    
     
     void getFsig(std::vector<float>& fftData, std::vector<float>& dest)
     {
@@ -274,12 +227,12 @@ public:
             auto phase = std::atan2(imag, real);
             
             //Obtain change in phase over 1 hopsize via phase buffer
-            float phaseDelta = phase - prevPhase[i];
+            float phaseDelta = phase - lastInputPhase[i];
             //Update phase buffer
-            prevPhase[i] = phase;
+            lastInputPhase[i] = phase;
             
             //Find center frequency of current Bin
-            auto binCenterFreq = twoPi * i / (float)fftSize;
+            auto binCenterFreq = twoPi * (float)i / (float)fftSize;
             
             //Calculate expected phase and subtract from delta Phase
             auto expectedPhase = binCenterFreq * (float)hopSize;
@@ -298,6 +251,11 @@ public:
         }
     }
     
+    void getFsig(std::vector<float>& buffer)
+    {
+        getFsig(buffer, buffer);
+    }
+    
     void resynthesizeFsig(std::vector<float>& source, std::vector<float>& dest)
     {
         auto numBins = fftSize / 2;
@@ -308,7 +266,7 @@ public:
         
         auto twoPi = juce::MathConstants<float>::twoPi;
         
-        for(int i = 1; i < numBins; ++i)
+        for(int i = 0; i < numBins; ++i)
         {
             auto mag = source[i * 2];
             auto freq = source[i * 2 + 1];
@@ -317,12 +275,12 @@ public:
             
             float phaseDelta = binDeviation * twoPi * (float)hopSize / (float)fftSize;
             
-            float binCenterFreq = twoPi * i / (float)fftSize;
+            float binCenterFreq = twoPi * (float)i / (float)fftSize;
             
             phaseDelta += binCenterFreq * hopSize;
             
-            float outPhase = wrapPhase(phaseDelta + outputPhase[i]);
-            outputPhase[i] = outPhase;
+            float outPhase = wrapPhase(phaseDelta + lastOutputPhase[i]);
+            lastOutputPhase[i] = outPhase;
             
             auto real = mag * std::cos(outPhase);
             auto imag = mag * std::sin(outPhase);
@@ -332,6 +290,11 @@ public:
         }
     }
     
+    void resynthesizeFsig(std::vector<float>& buffer)
+    {
+        resynthesizeFsig(buffer, buffer);
+    }
+    
     float wrapPhase(float phaseIn)
     {
         float pi = juce::MathConstants<float>::pi;
@@ -339,6 +302,16 @@ public:
             return fmodf(phaseIn + pi, 2.0 * pi) - pi;
         else
             return fmodf(phaseIn - pi, -2.0 * pi) + pi;
+    }
+    
+    void parameterChanged(const juce::String& parameterID, float newValue) override
+    {
+        if(parameterID == "pitchShift")
+        {
+            pitchShiftAmt.store(newValue);
+            DBG("Pitch new Val = " + juce::String(newValue));
+        }
+            
     }
     
     
@@ -352,7 +325,9 @@ private:
     float scaleFactor = 0.5;
     int sampsAccumulated = 0;
     
-    unsigned long test = 0;
+    
+    std::atomic<float> pitchShiftAmt{1.0};
+    
     double samplingRate;
     
     std::unique_ptr<juce::dsp::FFT> fftObject;
@@ -360,17 +335,11 @@ private:
     
     unsigned int inputBufferHead;
     std::vector<float> inputBuffer;
-    std::vector<float> outputBuffer;
     std::vector<float> fftInputBuffer;
     std::vector<float> fftOutputBuffer;
     
-    std::vector<float> magPhasePairs;
-    std::vector<float> windowedBuffer;
-    std::vector<float> complexProcessBuffer;
-    
-    std::vector<float> prevPhase;
-    std::vector<float> outputPhase;
-    std::vector<float> fsig;
+    std::vector<float> lastInputPhase;
+    std::vector<float> lastOutputPhase;
     
     unsigned int overlapReadPos = 0;
     unsigned int overlapWritePos = 0;
@@ -380,6 +349,8 @@ private:
     bool bufferFull = false;
     
     Window window;
+    
+    juce::AudioProcessorValueTreeState& valueTreeState;
     
 };
 

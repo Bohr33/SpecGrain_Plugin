@@ -53,9 +53,15 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    //Function to Create Parameter Layout
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
-    PhaseVocoder pv;
+    std::unique_ptr<PhaseVocoder> pv;
+    juce::AudioProcessorValueTreeState parameters;
+    
+    std::atomic<float>* pitchParameter = nullptr;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessor)
 };
