@@ -63,6 +63,9 @@ private:
     
     std::atomic<float>* pitchParameter = nullptr;
     std::atomic<float>* blurParameter = nullptr;
+    std::atomic<float>* stretchParameter = nullptr;
+    std::atomic<float>* delayParameter = nullptr;
+    
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessor)

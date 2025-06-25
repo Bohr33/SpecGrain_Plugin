@@ -28,10 +28,10 @@ public:
     void blurFsig(float blurAmt, fsig& fsigIn, fsig& fsigOut)
     {
         //copy currenty fsig into buffer
-        blurBuffer[blurIndex] = fsigIn;
+        blurBuffer[blurWriteIndex] = fsigIn;
         
         int blurFrames = juce::roundToInt(blurAmt * maxBlurFrames);
-        blurIndex = (blurIndex + 1) % maxBlurFrames;
+        blurWriteIndex = (blurWriteIndex + 1) % maxBlurFrames;
         
         if(blurFrames == 0)
         {
@@ -45,7 +45,7 @@ public:
             float freq = 0.0f;
             for(auto i = 0; i < blurFrames; i++)
             {
-                auto index = blurIndex - 1 - i;
+                auto index = blurWriteIndex - 1 - i;
                 index = (index + maxBlurFrames) % maxBlurFrames;
                 amp += blurBuffer[index].amplitudes[bin];
                 freq += blurBuffer[index].frequencies[bin];
@@ -55,14 +55,61 @@ public:
         }
     }
     
+private:
+    size_t numBins;
+    
+    std::vector<fsig> blurBuffer;
+    int blurWriteIndex = 0;
+    int maxBlurFrames = 600;
+};
+
+
+class SpectralDelay
+{
+public:
+    SpectralDelay(){};
+    
+    void prepare(size_t nBins)
+    {
+        numBins = nBins;
+        delayBuffer.resize(maxDelayFrames);
+        for(auto& f : delayBuffer)
+            f.resize(numBins);
+    }
+    
+    
+    void spectralStretch(float delayTime, float delayAmt, float feedback, fsig& fsigIn, fsig& fsigOut)
+    {
+        
+        writeIndex = (writeIndex + 1) % maxDelayFrames;
+        
+        fsigOut = fsigIn;
+        
+        int delayReadIndex = ((writeIndex - juce::roundToInt(delayTime * maxDelayFrames)) + maxDelayFrames) % maxDelayFrames;
+        
+        for(int bin = 0; bin < numBins; bin++)
+        {
+            auto ampIn = fsigIn.amplitudes[bin];
+            auto freqIn = fsigIn.frequencies[bin];
+            auto delayAmp = delayBuffer[delayReadIndex].amplitudes[bin];
+            auto delayFreq = delayBuffer[delayReadIndex].frequencies[bin];
+            
+            fsigOut.amplitudes[bin] += delayAmp * delayAmt;
+//            fsigOut.frequencies[bin] += delayFreq * delayAmt;
+            
+            delayBuffer[writeIndex].amplitudes[bin] = ampIn + delayAmp * feedback;
+            delayBuffer[writeIndex].frequencies[bin] = freqIn + delayFreq * feedback;
+        }
+    }
+    
     
     
 private:
     size_t numBins;
     
-    std::vector<fsig> blurBuffer;
-    int blurIndex = 0;
-    int maxBlurFrames = 600;
+    std::vector<fsig> delayBuffer;
+    int writeIndex = 0;
+    int maxDelayFrames = 500;
 };
 
 

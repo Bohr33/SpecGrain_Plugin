@@ -181,7 +181,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
     return
     {
         std::make_unique<AudioParameterFloat>(ParameterID {"pitchShift", versionHint}, "Pitch Shift", 0.0f, 3.0f, 1.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"blurAmt", versionHint}, "Blur Amount", 0.0f, 1.0f, 0.0f)
+        std::make_unique<AudioParameterFloat>(ParameterID {"blurAmt", versionHint}, "Blur Amount", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"stretchAmt", versionHint}, "Stretch Amount", 0.0f, 2.0f, 1.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"delayAmt", versionHint}, "Delay Amount", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"delayTime", versionHint}, "Delay Time", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"feedback", versionHint}, "Feedback", 0.0f, 1.0f, 0.0f),
+        
     };
 }
 

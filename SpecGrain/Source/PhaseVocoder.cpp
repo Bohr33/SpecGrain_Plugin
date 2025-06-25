@@ -30,6 +30,10 @@ PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : window(fft
 {
     valueTreeState.addParameterListener("pitchShift", this);
     valueTreeState.addParameterListener("blurAmt", this);
+    valueTreeState.addParameterListener("stretchAmt", this);
+    valueTreeState.addParameterListener("delayAmt", this);
+    valueTreeState.addParameterListener("delayTime", this);
+    valueTreeState.addParameterListener("feedback", this);
 }
 
 void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
@@ -43,6 +47,7 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
     ifftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     
     blurObj.prepare(numBins);
+    delayObj.prepare(numBins);
     
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
@@ -106,12 +111,19 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         
         float pShift = pitchShiftAmt.load();
         float blurAmt = blurAmount.load();
+        float stretch = stretchAmt.load();
+        float dAmt = delayAmt.load();
+        float dTime = delayTime.load();
+        float dfeed = feedback.load();
+        
         //Process in Spectral Domain Here
         pitchShift(pShift, fsigIn, fsigOut);
         
-        blurObj.blurFsig(blurAmt, fsigOut, fsigIn);
+
+        delayObj.spectralStretch(dTime, dAmt, dfeed, fsigOut, fsigIn);
+        blurObj.blurFsig(blurAmt, fsigIn, fsigOut);
         
-        pvSynthesize(fsigIn, fftBuffer);
+        pvSynthesize(fsigOut, fftBuffer);
         
         
         ifftObject->performRealOnlyInverseTransform(fftBuffer.data());
@@ -251,7 +263,18 @@ void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newVa
     {
         blurAmount.store(newValue);
         DBG("Blur Amt = " + juce::String(newValue));
-    }
+    }else if(parameterID == "stretchAmt")
+    {
+        stretchAmt.store(newValue);
+        DBG("Stretch Amt = " + juce::String(newValue));
+    }else if(parameterID == "delayAmt")
+    {
+        delayAmt.store((newValue));
+        DBG("Delay Amt = " + juce::String(newValue));
+    }else if(parameterID == "delayTime")
+        delayTime.store(newValue);
+    else if(parameterID == "feedback")
+        feedback.store(newValue);
         
 }
 

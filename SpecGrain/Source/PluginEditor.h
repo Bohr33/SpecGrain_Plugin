@@ -38,5 +38,21 @@ private:
     juce::Label  blurSliderLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> blurSliderAttch;
 
+    juce::Slider stretchSlider;
+    juce::Label  stretchSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stretchSliderAttch;
+    
+    juce::Slider delayAmtSlider;
+    juce::Label  delayAmtSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> delayAmtSliderAttch;
+
+    juce::Slider delayTimeSlider;
+    juce::Label  delayTimeSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> delayTimeSliderAttch;
+    
+    juce::Slider feedbackSlider;
+    juce::Label  feedbackLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> feedbackSliderAttch;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessorEditor)
 };
