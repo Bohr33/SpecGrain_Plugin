@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <vector>
 #include <JuceHeader.h>
+#include "Fsig.h"
+#include "SpectralProcessors.hpp"
 
 
 class Window
@@ -29,25 +31,7 @@ private:
 class PhaseVocoder : juce::AudioProcessorValueTreeState::Listener
 {
 public:
-    
-    struct fsig{
-        std::vector<float> amplitudes;
-        std::vector<float> frequencies;
-        
-        void resize(size_t size)
-        {
-            amplitudes.resize(size);
-            frequencies.resize(size);
-        }
-        
-        void clear()
-        {
-            juce::FloatVectorOperations::clear(amplitudes.data(), amplitudes.size());
-            juce::FloatVectorOperations::clear(frequencies.data(), frequencies.size());
-        }
-    };
-    
-    
+
     PhaseVocoder(juce::AudioProcessorValueTreeState& vts);
     
     void prepare(size_t buffSize, double sampleRate);
@@ -70,19 +54,19 @@ public:
     
     
 private:
-    
+    double samplingRate;
     size_t bufferSize;
     size_t fftSize = 1024;
     size_t hopSize = fftSize / 8;
     size_t hopsPerBlock;
     size_t numBins = fftSize / 2 + 1;
+
     float scaleFactor = 0.5;
     int sampsAccumulated = 0;
     
-    
+    //Parameters
     std::atomic<float> pitchShiftAmt{1.0};
-    
-    double samplingRate;
+    std::atomic<float> blurAmount{0.0};
     
     std::unique_ptr<juce::dsp::FFT> fftObject;
     std::unique_ptr<juce::dsp::FFT> ifftObject;
@@ -97,6 +81,8 @@ private:
     //Spectral Processing Buffer Objects
     fsig fsigIn;
     fsig fsigOut;
+    
+    SpectralBlur blurObj;
     
     unsigned int overlapReadPos = 0;
     unsigned int overlapWritePos = 0;

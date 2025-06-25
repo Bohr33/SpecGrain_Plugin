@@ -29,6 +29,7 @@ float Window::getRawValue(unsigned int index)
 PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : window(fftSize), valueTreeState(vts)
 {
     valueTreeState.addParameterListener("pitchShift", this);
+    valueTreeState.addParameterListener("blurAmt", this);
 }
 
 void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
@@ -41,6 +42,8 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
     fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     ifftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     
+    blurObj.prepare(numBins);
+    
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
     
@@ -52,6 +55,7 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
     
     lastInputPhase.clear();
     lastOutputPhase.clear();
+
     
     overlapBuffer.resize(fftSize * 2);
     bufferFull = false;
@@ -101,10 +105,13 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         pvAnalyze(fftBuffer, fsigIn);
         
         float pShift = pitchShiftAmt.load();
+        float blurAmt = blurAmount.load();
         //Process in Spectral Domain Here
         pitchShift(pShift, fsigIn, fsigOut);
         
-        pvSynthesize(fsigOut, fftBuffer);
+        blurObj.blurFsig(blurAmt, fsigOut, fsigIn);
+        
+        pvSynthesize(fsigIn, fftBuffer);
         
         
         ifftObject->performRealOnlyInverseTransform(fftBuffer.data());
@@ -239,9 +246,12 @@ float PhaseVocoder::wrapPhase(float phaseIn)
 void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newValue)
 {
     if(parameterID == "pitchShift")
-    {
         pitchShiftAmt.store(newValue);
-        DBG("Pitch new Val = " + juce::String(newValue));
+    else if(parameterID == "blurAmt")
+    {
+        blurAmount.store(newValue);
+        DBG("Blur Amt = " + juce::String(newValue));
     }
         
 }
+

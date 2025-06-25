@@ -33,6 +33,10 @@ private:
     juce::Slider pitchSlider;
     juce::Label  pitchSliderLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchSliderAttch;
+    
+    juce::Slider blurSlider;
+    juce::Label  blurSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> blurSliderAttch;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessorEditor)
 };

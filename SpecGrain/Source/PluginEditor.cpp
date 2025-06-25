@@ -24,9 +24,18 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
     pitchSliderLabel.setJustificationType(juce::Justification::centred);
     
+    blurSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "blurAmt", blurSlider));
+    blurSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    blurSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    
+    blurSliderLabel.setText("Blur Amount", juce::dontSendNotification);
+    blurSliderLabel.setJustificationType(juce::Justification::centred);
+    
     
     addAndMakeVisible(&pitchSlider);
     addAndMakeVisible(&pitchSliderLabel);
+    addAndMakeVisible(&blurSlider);
+    addAndMakeVisible(&blurSliderLabel);
 }
 
 SpecGrainAudioProcessorEditor::~SpecGrainAudioProcessorEditor()
@@ -51,6 +60,9 @@ void SpecGrainAudioProcessorEditor::resized()
     int sliderHeight = 100;
     int labelHeight = 40;
     
-    pitchSlider.setBounds(width / 2 - sliderWidth/2, height/2, sliderWidth, sliderHeight);
-    pitchSliderLabel.setBounds(width / 2 - sliderWidth/2, height/2 + sliderHeight, sliderWidth, labelHeight);
+    pitchSlider.setBounds(width / 2 - sliderWidth, height/2, sliderWidth, sliderHeight);
+    pitchSliderLabel.setBounds(width / 2 - sliderWidth, height/2 + sliderHeight, sliderWidth, labelHeight);
+    
+    blurSlider.setBounds(width / 2, height / 2, sliderWidth, sliderHeight);
+    blurSliderLabel.setBounds(width / 2, height / 2 + sliderHeight, sliderWidth, labelHeight);
 }

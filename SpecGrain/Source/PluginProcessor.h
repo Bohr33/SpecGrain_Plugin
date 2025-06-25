@@ -62,6 +62,8 @@ private:
     juce::AudioProcessorValueTreeState parameters;
     
     std::atomic<float>* pitchParameter = nullptr;
+    std::atomic<float>* blurParameter = nullptr;
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessor)
 };
