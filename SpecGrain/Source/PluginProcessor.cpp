@@ -99,7 +99,8 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
-    pv->prepare(samplesPerBlock, sampleRate);
+    DBG("Preapre FFT size = " + juce::String(fftSize));
+    pv->prepare(samplesPerBlock, sampleRate, fftSize);
 }
 
 void SpecGrainAudioProcessor::releaseResources()
@@ -186,6 +187,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
         std::make_unique<AudioParameterFloat>(ParameterID {"delayAmt", versionHint}, "Delay Amount", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"delayTime", versionHint}, "Delay Time", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"feedback", versionHint}, "Feedback", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"delayFreqToggle", versionHint}, "Delay Freq Toggle", 0.0f, 1.0f, 0.0f),
+        
         
     };
 }

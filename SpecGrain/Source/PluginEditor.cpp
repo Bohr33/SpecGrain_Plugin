@@ -61,6 +61,37 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     feedbackLabel.setText("Feedback", juce::dontSendNotification);
     feedbackLabel.setJustificationType(juce::Justification::centred);
     
+    delayFreqButtonAttch.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "delayFreqToggle", delayFreqButton));
+    
+    delayFreqButton.setToggleable(true);
+    delayFreqButton.setClickingTogglesState(true);
+    delayFreqButton.setButtonText("Toggle Freq Delay");
+    
+    fftSizeMenu.addItem("512", 1);
+    fftSizeMenu.addItem("1024", 2);
+    fftSizeMenu.addItem("2048", 3);
+    fftSizeMenu.setSelectedId(2);
+    
+    fftSizeMenu.onChange = [this](){
+        switch (fftSizeMenu.getSelectedId()) {
+            case 1:
+                audioProcessor.fftSize = 512;
+                break;
+            case 2:
+                audioProcessor.fftSize = 1024;
+                break;
+            case 3:
+                audioProcessor.fftSize = 2048;
+                DBG("2048 selected");
+                break;
+            default:
+                audioProcessor.fftSize = 1024;
+                break;
+        }
+        processor.prepareToPlay(processor.getSampleRate(), processor.getBlockSize());
+    };
+    
+    
     addAndMakeVisible(&pitchSlider);
     addAndMakeVisible(&pitchSliderLabel);
     addAndMakeVisible(&blurSlider);
@@ -74,6 +105,10 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     
     addAndMakeVisible(&feedbackSlider);
     addAndMakeVisible(&feedbackLabel);
+    
+    addAndMakeVisible(&delayFreqButton);
+    
+    addAndMakeVisible(&fftSizeMenu);
 }
 
 SpecGrainAudioProcessorEditor::~SpecGrainAudioProcessorEditor()
@@ -99,8 +134,6 @@ void SpecGrainAudioProcessorEditor::resized()
     int sliderHeight = 100;
     int labelHeight = 40;
     
-    int sliderGroupWidth = sliderWidth * numSliders;
-    
     int topY = 0;
     int topX = width / 2 - sliderWidth;
     
@@ -112,19 +145,25 @@ void SpecGrainAudioProcessorEditor::resized()
     
     
     //Delay Group
-    int delayHeights = height - sliderHeight - labelHeight;
+    int delayY = height - sliderHeight - labelHeight;
     int delayX = 0;
+    int buttonWidth = sliderWidth;
+    int buttonHeight = labelHeight;
     
-    delayTimeSlider.setBounds(delayX, delayHeights, sliderWidth, sliderHeight);
-    delayTimeSliderLabel.setBounds(delayX, delayHeights + sliderHeight, sliderWidth, labelHeight);
+    delayTimeSlider.setBounds(delayX, delayY, sliderWidth, sliderHeight);
+    delayTimeSliderLabel.setBounds(delayX, delayY + sliderHeight, sliderWidth, labelHeight);
     
-    stretchSlider.setBounds(delayX + sliderWidth , delayHeights, sliderWidth, sliderHeight);
-    stretchSliderLabel.setBounds(delayX + sliderWidth, delayHeights + sliderHeight, sliderWidth, labelHeight);
+    stretchSlider.setBounds(delayX + sliderWidth , delayY, sliderWidth, sliderHeight);
+    stretchSliderLabel.setBounds(delayX + sliderWidth, delayY + sliderHeight, sliderWidth, labelHeight);
     
-    delayAmtSlider.setBounds(delayX + 2 * sliderWidth , delayHeights, sliderWidth, sliderHeight);
-    delayAmtSliderLabel.setBounds(delayX + 2 * sliderWidth, delayHeights + sliderHeight, sliderWidth, labelHeight);
+    delayAmtSlider.setBounds(delayX + 2 * sliderWidth , delayY, sliderWidth, sliderHeight);
+    delayAmtSliderLabel.setBounds(delayX + 2 * sliderWidth, delayY + sliderHeight, sliderWidth, labelHeight);
     
-    feedbackSlider.setBounds(delayX + 3 * sliderWidth, delayHeights, sliderWidth, sliderHeight);
-    feedbackLabel.setBounds(delayX + 3 * sliderWidth, delayHeights + sliderHeight, sliderWidth, labelHeight);
+    feedbackSlider.setBounds(delayX + 3 * sliderWidth, delayY, sliderWidth, sliderHeight);
+    feedbackLabel.setBounds(delayX + 3 * sliderWidth, delayY + sliderHeight, sliderWidth, labelHeight);
+    
+    delayFreqButton.setBounds(delayX, delayY - buttonHeight, buttonWidth, buttonHeight);
+    
+    fftSizeMenu.setBounds(5, 5, sliderWidth - 10, 30);
     
 }

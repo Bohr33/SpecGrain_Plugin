@@ -78,8 +78,9 @@ public:
     }
     
     
-    void spectralStretch(float delayTime, float delayAmt, float feedback, fsig& fsigIn, fsig& fsigOut)
+    void spectralStretch(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut)
     {
+        float freqTogVal = freqToggle ? 1.0 : 0.0;
         
         writeIndex = (writeIndex + 1) % maxDelayFrames;
         
@@ -95,7 +96,7 @@ public:
             auto delayFreq = delayBuffer[delayReadIndex].frequencies[bin];
             
             fsigOut.amplitudes[bin] += delayAmp * delayAmt;
-//            fsigOut.frequencies[bin] += delayFreq * delayAmt;
+            fsigOut.frequencies[bin] += delayFreq * delayAmt * freqTogVal;
             
             delayBuffer[writeIndex].amplitudes[bin] = ampIn + delayAmp * feedback;
             delayBuffer[writeIndex].frequencies[bin] = freqIn + delayFreq * feedback;

@@ -26,7 +26,7 @@ float Window::getRawValue(unsigned int index)
 
 
 
-PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : window(fftSize), valueTreeState(vts)
+PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : valueTreeState(vts)
 {
     valueTreeState.addParameterListener("pitchShift", this);
     valueTreeState.addParameterListener("blurAmt", this);
@@ -34,10 +34,12 @@ PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : window(fft
     valueTreeState.addParameterListener("delayAmt", this);
     valueTreeState.addParameterListener("delayTime", this);
     valueTreeState.addParameterListener("feedback", this);
+    valueTreeState.addParameterListener("delayFreqToggle", this);
 }
 
-void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
+void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int sizeFft)
 {
+    fftSize = sizeFft;
     samplingRate = sampleRate;
     bufferSize = buffSize;
     hopsPerBlock = bufferSize / hopSize;
@@ -45,6 +47,8 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate)
     auto fftOrder = std::log2(fftSize);
     fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     ifftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
+    
+    window = std::make_unique<Window>(fftSize);
     
     blurObj.prepare(numBins);
     delayObj.prepare(numBins);
@@ -97,7 +101,7 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         for(int i = 0; i < fftSize; ++i)
         {
             auto readIndex = (inputBufferHead + i) % fftSize;
-            fftBuffer[i] = window.getRawValue(i) * inputBuffer[readIndex];
+            fftBuffer[i] = window->getRawValue(i) * inputBuffer[readIndex];
         }
         
         inputBufferHead += hopSize;
@@ -115,12 +119,13 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         float dAmt = delayAmt.load();
         float dTime = delayTime.load();
         float dfeed = feedback.load();
+        bool  dFreqToggle = delayFreqToggle.load();
         
         //Process in Spectral Domain Here
         pitchShift(pShift, fsigIn, fsigOut);
         
 
-        delayObj.spectralStretch(dTime, dAmt, dfeed, fsigOut, fsigIn);
+        delayObj.spectralStretch(dTime, dAmt, dfeed, dFreqToggle, fsigOut, fsigIn);
         blurObj.blurFsig(blurAmt, fsigIn, fsigOut);
         
         pvSynthesize(fsigOut, fftBuffer);
@@ -131,7 +136,7 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         
         //Apply window on output
         for(int i = 0; i < fftSize; ++i)
-            fftBuffer[i] = window.getRawValue(i) * fftBuffer[i];
+            fftBuffer[i] = window->getRawValue(i) * fftBuffer[i];
 
         //Add newest data to overlap buffer
         addDataToOverlap(fftBuffer);
@@ -275,6 +280,11 @@ void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newVa
         delayTime.store(newValue);
     else if(parameterID == "feedback")
         feedback.store(newValue);
+    else if(parameterID == "delayFreqToggle")
+    {
+        DBG("Toggle Val = " + juce::String(newValue));
+        delayFreqToggle.store(newValue);
+    }
         
 }
 

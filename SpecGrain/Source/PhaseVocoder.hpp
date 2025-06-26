@@ -34,7 +34,7 @@ public:
 
     PhaseVocoder(juce::AudioProcessorValueTreeState& vts);
     
-    void prepare(size_t buffSize, double sampleRate);
+    void prepare(size_t buffSize, double sampleRate, unsigned int sizeFft);
     
     void process(juce::AudioBuffer<float>& buffer);
     
@@ -71,6 +71,7 @@ private:
     std::atomic<float> feedback{0.0};
     std::atomic<float> delayAmt{0.0};
     std::atomic<float> delayTime{0.0};
+    std::atomic<bool> delayFreqToggle{false};
     
     
     std::unique_ptr<juce::dsp::FFT> fftObject;
@@ -96,8 +97,7 @@ private:
     
     
     bool bufferFull = false;
-    
-    Window window;
+    std::unique_ptr<Window> window;
     
     juce::AudioProcessorValueTreeState& valueTreeState;
     
