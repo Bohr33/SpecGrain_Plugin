@@ -31,15 +31,23 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     blurSliderLabel.setText("Blur Amount", juce::dontSendNotification);
     blurSliderLabel.setJustificationType(juce::Justification::centred);
     
-    stretchSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "stretchAmt", stretchSlider));
-    stretchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    stretchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
-    stretchSliderLabel.setText("Stretch Amount", juce::dontSendNotification);
-    stretchSliderLabel.setJustificationType(juce::Justification::centred);
+    //Stretch Parameters
+    stretchTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "stretchTime", stretchTimeSlider));
+    stretchTimeSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    stretchTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    
+    stretchTimeSliderLabel.setText("Stretch Time", juce::dontSendNotification);
+    stretchTimeSliderLabel.setJustificationType(juce::Justification::centred);
+    
+    stretchDensitySliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "stretchDensity", stretchDensitySlider));
+    stretchDensitySlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    stretchDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    
+    stretchDensitySliderLabel.setText("Stretch Density", juce::dontSendNotification);
+    stretchDensitySliderLabel.setJustificationType(juce::Justification::centred);
     
     //Delay Parameters
-    
     delayAmtSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "delayAmt", delayAmtSlider));
     delayAmtSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     delayAmtSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
@@ -96,8 +104,10 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     addAndMakeVisible(&pitchSliderLabel);
     addAndMakeVisible(&blurSlider);
     addAndMakeVisible(&blurSliderLabel);
-    addAndMakeVisible(&stretchSlider);
-    addAndMakeVisible(&stretchSliderLabel);
+    addAndMakeVisible(&stretchTimeSlider);
+    addAndMakeVisible(&stretchTimeSliderLabel);
+    addAndMakeVisible(&stretchDensitySlider);
+    addAndMakeVisible(&stretchDensitySliderLabel);
     addAndMakeVisible(&delayAmtSlider);
     addAndMakeVisible(&delayAmtSliderLabel);
     addAndMakeVisible(&delayTimeSlider);
@@ -143,6 +153,9 @@ void SpecGrainAudioProcessorEditor::resized()
     blurSlider.setBounds(topX + sliderWidth, topY, sliderWidth, sliderHeight);
     blurSliderLabel.setBounds(topX + sliderWidth, topY + sliderHeight, sliderWidth, labelHeight);
     
+    stretchDensitySlider.setBounds(topX + sliderWidth * 2, topY, sliderWidth, sliderHeight);
+    stretchDensitySliderLabel.setBounds(topX + sliderWidth * 2, topY + sliderHeight, sliderWidth, labelHeight);
+    
     
     //Delay Group
     int delayY = height - sliderHeight - labelHeight;
@@ -153,8 +166,8 @@ void SpecGrainAudioProcessorEditor::resized()
     delayTimeSlider.setBounds(delayX, delayY, sliderWidth, sliderHeight);
     delayTimeSliderLabel.setBounds(delayX, delayY + sliderHeight, sliderWidth, labelHeight);
     
-    stretchSlider.setBounds(delayX + sliderWidth , delayY, sliderWidth, sliderHeight);
-    stretchSliderLabel.setBounds(delayX + sliderWidth, delayY + sliderHeight, sliderWidth, labelHeight);
+    stretchTimeSlider.setBounds(delayX + sliderWidth , delayY, sliderWidth, sliderHeight);
+    stretchTimeSliderLabel.setBounds(delayX + sliderWidth, delayY + sliderHeight, sliderWidth, labelHeight);
     
     delayAmtSlider.setBounds(delayX + 2 * sliderWidth , delayY, sliderWidth, sliderHeight);
     delayAmtSliderLabel.setBounds(delayX + 2 * sliderWidth, delayY + sliderHeight, sliderWidth, labelHeight);

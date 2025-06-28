@@ -66,7 +66,8 @@ private:
     
     std::atomic<float>* pitchParameter = nullptr;
     std::atomic<float>* blurParameter = nullptr;
-    std::atomic<float>* stretchParameter = nullptr;
+    std::atomic<float>* strTimeParameter = nullptr;
+    std::atomic<float>* strDenParameter = nullptr;
     std::atomic<float>* delayParameter = nullptr;
     std::atomic<float>* delayFreqToggleParameter = nullptr;
     

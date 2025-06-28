@@ -38,9 +38,13 @@ private:
     juce::Label  blurSliderLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> blurSliderAttch;
 
-    juce::Slider stretchSlider;
-    juce::Label  stretchSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stretchSliderAttch;
+    juce::Slider stretchTimeSlider;
+    juce::Label  stretchTimeSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stretchTimeSliderAttch;
+    
+    juce::Slider stretchDensitySlider;
+    juce::Label  stretchDensitySliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stretchDensitySliderAttch;
     
     juce::Slider delayAmtSlider;
     juce::Label  delayAmtSliderLabel;

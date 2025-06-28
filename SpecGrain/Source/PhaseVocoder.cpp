@@ -30,11 +30,12 @@ PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : valueTreeS
 {
     valueTreeState.addParameterListener("pitchShift", this);
     valueTreeState.addParameterListener("blurAmt", this);
-    valueTreeState.addParameterListener("stretchAmt", this);
+    valueTreeState.addParameterListener("stretchTime", this);
     valueTreeState.addParameterListener("delayAmt", this);
     valueTreeState.addParameterListener("delayTime", this);
     valueTreeState.addParameterListener("feedback", this);
     valueTreeState.addParameterListener("delayFreqToggle", this);
+    valueTreeState.addParameterListener("stretchDensity", this);
 }
 
 void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int sizeFft)
@@ -52,6 +53,8 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     
     blurObj.prepare(numBins);
     delayObj.prepare(numBins);
+    stretchObj.prepare(numBins);
+    stretchObj2.prepare(numBins);
     
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
@@ -115,7 +118,8 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         
         float pShift = pitchShiftAmt.load();
         float blurAmt = blurAmount.load();
-        float stretch = stretchAmt.load();
+        float strTime = stretchTime.load();
+        float strDen = stretchDensity.load();
         float dAmt = delayAmt.load();
         float dTime = delayTime.load();
         float dfeed = feedback.load();
@@ -124,11 +128,14 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         //Process in Spectral Domain Here
         pitchShift(pShift, fsigIn, fsigOut);
         
-
-        delayObj.spectralStretch(dTime, dAmt, dfeed, dFreqToggle, fsigOut, fsigIn);
-        blurObj.blurFsig(blurAmt, fsigIn, fsigOut);
+//        stretchObj.process(stretch, fsigOut, fsigIn);
+        stretchObj2.process(strTime, strDen, fsigOut, fsigIn);
         
-        pvSynthesize(fsigOut, fftBuffer);
+
+        delayObj.spectralStretch(dTime, dAmt, dfeed, dFreqToggle, fsigIn, fsigOut);
+        blurObj.blurFsig(blurAmt, fsigOut, fsigIn);
+        
+        pvSynthesize(fsigIn, fftBuffer);
         
         
         ifftObject->performRealOnlyInverseTransform(fftBuffer.data());
@@ -268,10 +275,15 @@ void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newVa
     {
         blurAmount.store(newValue);
         DBG("Blur Amt = " + juce::String(newValue));
-    }else if(parameterID == "stretchAmt")
+    }else if(parameterID == "stretchTime")
     {
-        stretchAmt.store(newValue);
+        stretchTime.store(newValue);
         DBG("Stretch Amt = " + juce::String(newValue));
+    }
+    else if(parameterID == "stretchDensity")
+    {
+        stretchDensity.store(newValue);
+        DBG("Stretch Density = " + juce::String(newValue));
     }else if(parameterID == "delayAmt")
     {
         delayAmt.store((newValue));

@@ -67,7 +67,8 @@ private:
     //Parameters
     std::atomic<float> pitchShiftAmt{1.0};
     std::atomic<float> blurAmount{0.0};
-    std::atomic<float> stretchAmt{1.0};
+    std::atomic<float> stretchTime{0.0};
+    std::atomic<float> stretchDensity{0.0};
     std::atomic<float> feedback{0.0};
     std::atomic<float> delayAmt{0.0};
     std::atomic<float> delayTime{0.0};
@@ -90,6 +91,8 @@ private:
     
     SpectralBlur blurObj;
     SpectralDelay delayObj;
+    SpectralStretch stretchObj;
+    SpectralStretch2 stretchObj2;
     
     unsigned int overlapReadPos = 0;
     unsigned int overlapWritePos = 0;
