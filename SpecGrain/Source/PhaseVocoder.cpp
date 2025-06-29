@@ -52,10 +52,12 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     
     window = std::make_unique<Window>(fftSize);
     
+    pShiftObj.prepare(numBins);
     blurObj.prepare(numBins);
     delayObj.prepare(numBins);
     stretchObj2.prepare(numBins);
     gateObj.prepare(numBins);
+    
     
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
@@ -128,14 +130,9 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         bool  dFreqToggle = delayFreqToggle.load();
         
         //Process in Spectral Domain Here
-        pitchShift(pShift, fsigIn, fsigOut);
-        
-//        stretchObj.process(stretch, fsigOut, fsigIn);
+        pShiftObj.process(pShift, fsigIn, fsigOut);
         stretchObj2.process(strTime, strDen, fsigOut, fsigIn);
-        
         gateObj.process(gAmt, fsigIn);
-        
-
         delayObj.spectralStretch(dTime, dAmt, dfeed, dFreqToggle, fsigIn, fsigOut);
         blurObj.blurFsig(blurAmt, fsigOut, fsigIn);
         
@@ -177,25 +174,6 @@ void PhaseVocoder::addDataToOverlap(std::vector<float>& dataToWrite)
     }
     overlapWritePos += hopSize;
     overlapWritePos %= overlapBuffer.size();
-}
-
-void PhaseVocoder::pitchShift(float shiftAmt, fsig& fsigIn, fsig& fsigOut)
-{
-    fsigOut.clear();
-    
-    //Ignore DC and Nyquist bins for now
-    for(int bin = 0; bin < numBins; bin++)
-    {
-        int newBin = juce::roundToInt(shiftAmt * bin);
-
-        if(newBin < numBins)
-        {
-            fsigOut.amplitudes[newBin] += fsigIn.amplitudes[bin];
-            fsigOut.frequencies[newBin] = shiftAmt * fsigIn.frequencies[bin];
-        }
-
-    }
-    
 }
 
 void PhaseVocoder::pvAnalyze(std::vector<float>& fftInput, fsig& fsig)

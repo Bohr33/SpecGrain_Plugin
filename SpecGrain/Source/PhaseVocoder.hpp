@@ -41,8 +41,6 @@ public:
     void addDataToOverlap(std::vector<float>& dataToWrite);
     void getMagnitudePhase(std::vector<float>& complexPairs, std::vector<float>& magPhase);
     void getRealImag(std::vector<float>& magPhase, std::vector<float>& complexPairs);
-    
-    void pitchShift(float shiftAmt, fsig& fsigIn, fsig& fsigOut);
 
     void pvAnalyze(std::vector<float>& fftInput, fsig& fsig);
 
@@ -90,10 +88,11 @@ private:
     fsig fsigIn;
     fsig fsigOut;
     
+    PitchShift pShiftObj;
     SpectralBlur blurObj;
     SpectralDelay delayObj;
-    SpectralStretch2 stretchObj2;
-    fsigGate gateObj;
+    SpectralStretch stretchObj2;
+    SpectralGate gateObj;
     
     
     unsigned int overlapReadPos = 0;
