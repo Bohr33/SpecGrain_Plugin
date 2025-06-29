@@ -61,6 +61,10 @@ private:
     juce::TextButton delayFreqButton;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayFreqButtonAttch;
     
+    juce::Slider gateSlider;
+    juce::Label gateSliderLabel;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gateSliderAttch;
+    
     juce::ComboBox fftSizeMenu;
     
     

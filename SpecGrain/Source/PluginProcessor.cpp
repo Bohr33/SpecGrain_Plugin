@@ -189,8 +189,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
         std::make_unique<AudioParameterFloat>(ParameterID {"delayTime", versionHint}, "Delay Time", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"feedback", versionHint}, "Feedback", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"delayFreqToggle", versionHint}, "Delay Freq Toggle", 0.0f, 1.0f, 0.0f),
-        
-        
+        std::make_unique<juce::AudioParameterFloat>(
+            juce::ParameterID("gateAmt", 1),
+            "Gate Amount",
+            juce::NormalisableRange<float>(0.0f, 1.0f, 0.0001f),
+            0.0f,
+            juce::String(),
+            juce::AudioProcessorParameter::genericParameter,
+            [](float value, int) {
+                return juce::String(value, 4); // 4 decimal places
+            })
     };
 }
 

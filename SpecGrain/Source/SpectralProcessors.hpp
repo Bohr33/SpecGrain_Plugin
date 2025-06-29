@@ -196,15 +196,13 @@ public:
         int numFrames = maxFrames * stretchTime;
         
         //Each increment, increase (decrease) buffer index by 1 - stretch amount
-        float indexDelta = numFrames / ((1 - stretchDensity) * 10);
+        float indexDelta = numFrames / (stretchDensity * 10);
         
         float index = wrapFloatIndex(writeIndex, maxFrames);
         
         //cacluate number of iterations needed
         float numIterations = numFrames / indexDelta;
         numIterations = juce::jmin<float>(numIterations, 100.0);
-        
-        DBG("numIterations = " + juce::String(numIterations));
         
         //increment and total length cancel out to give maxFrames as number of iterations
         for(int j = 0; j < (int) numIterations; j++)
@@ -307,6 +305,34 @@ private:
     std::vector<fsig> delayBuffer;
     int writeIndex = 0;
     int maxDelayFrames = 500;
+};
+
+
+
+class fsigGate
+{
+public:
+    fsigGate(){};
+    
+    void prepare(size_t nBins)
+    {
+        numBins = nBins;
+    }
+    
+    void process(float gateAmount, fsig& input)
+    {
+        for(auto i = 0; i < numBins; i++)
+        {
+            if(input.amplitudes[i] <= gateAmount)
+            {
+                input.amplitudes[i] = 0.0;
+            }
+        }
+    }
+    
+private:
+    size_t numBins;
+    
 };
 
 

@@ -36,6 +36,7 @@ PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : valueTreeS
     valueTreeState.addParameterListener("feedback", this);
     valueTreeState.addParameterListener("delayFreqToggle", this);
     valueTreeState.addParameterListener("stretchDensity", this);
+    valueTreeState.addParameterListener("gateAmt", this);
 }
 
 void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int sizeFft)
@@ -53,8 +54,8 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     
     blurObj.prepare(numBins);
     delayObj.prepare(numBins);
-    stretchObj.prepare(numBins);
     stretchObj2.prepare(numBins);
+    gateObj.prepare(numBins);
     
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
@@ -123,6 +124,7 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         float dAmt = delayAmt.load();
         float dTime = delayTime.load();
         float dfeed = feedback.load();
+        float gAmt = gateAmt.load();
         bool  dFreqToggle = delayFreqToggle.load();
         
         //Process in Spectral Domain Here
@@ -130,6 +132,8 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         
 //        stretchObj.process(stretch, fsigOut, fsigIn);
         stretchObj2.process(strTime, strDen, fsigOut, fsigIn);
+        
+        gateObj.process(gAmt, fsigIn);
         
 
         delayObj.spectralStretch(dTime, dAmt, dfeed, dFreqToggle, fsigIn, fsigOut);
@@ -296,6 +300,10 @@ void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newVa
     {
         DBG("Toggle Val = " + juce::String(newValue));
         delayFreqToggle.store(newValue);
+    }else if(parameterID == "gateAmt")
+    {
+        DBG("Gate Amount = " + juce::String(newValue));
+        gateAmt.store(newValue);
     }
         
 }

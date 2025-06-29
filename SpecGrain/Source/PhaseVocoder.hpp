@@ -73,6 +73,7 @@ private:
     std::atomic<float> delayAmt{0.0};
     std::atomic<float> delayTime{0.0};
     std::atomic<bool> delayFreqToggle{false};
+    std::atomic<float> gateAmt{0.0};
     
     
     std::unique_ptr<juce::dsp::FFT> fftObject;
@@ -91,8 +92,9 @@ private:
     
     SpectralBlur blurObj;
     SpectralDelay delayObj;
-    SpectralStretch stretchObj;
     SpectralStretch2 stretchObj2;
+    fsigGate gateObj;
+    
     
     unsigned int overlapReadPos = 0;
     unsigned int overlapWritePos = 0;
