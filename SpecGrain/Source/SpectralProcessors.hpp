@@ -29,7 +29,7 @@ public:
     SpectralBlur(){};
     
     void prepare(size_t nBins);
-    void blurFsig(float blurAmt, fsig& fsigIn, fsig& fsigOut);
+    void process(float blurAmt, fsig& fsigIn, fsig& fsigOut);
     
 private:
     size_t numBins;
@@ -59,7 +59,6 @@ private:
     
     float spacing;
     
-    //Can't process more than 5 frames before CPU bottlenecks
     unsigned int maxFrames = 1000;
     
 };
@@ -70,15 +69,18 @@ class SpectralDelay
 public:
     SpectralDelay(){};
     
-    void prepare(size_t nBins);
-    void spectralStretch(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut);
+    void prepare(size_t nBins, double sampleRate, size_t hSize);
+    void process(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut);
     
 private:
     size_t numBins;
+    size_t hopSize;
+    double sr;
     
     std::vector<fsig> delayBuffer;
     int writeIndex = 0;
-    int maxDelayFrames = 500;
+    float maxDelaySeconds = 2.0;
+    int maxDelayFrames;
 };
 
 

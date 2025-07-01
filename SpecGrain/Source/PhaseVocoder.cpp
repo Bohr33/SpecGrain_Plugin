@@ -48,13 +48,12 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     
     auto fftOrder = std::log2(fftSize);
     fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
-    ifftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     
     window = std::make_unique<Window>(fftSize);
     
     pShiftObj.prepare(numBins);
     blurObj.prepare(numBins);
-    delayObj.prepare(numBins);
+    delayObj.prepare(numBins, sampleRate, hopSize);
     stretchObj2.prepare(numBins);
     gateObj.prepare(numBins);
     
@@ -65,8 +64,8 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     lastInputPhase.resize(fftSize/2);
     lastOutputPhase.resize(fftSize/2);
     
-    fsigIn.resize(numBins);
-    fsigOut.resize(numBins);
+    fsigBuff1.resize(numBins);
+    fsigBuff2.resize(numBins);
     
     lastInputPhase.clear();
     lastOutputPhase.clear();
@@ -83,14 +82,16 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     
 }
 
-void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
+void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
 {
     //Perform stft operation for as many hop sizes
     //within 1 buffersize
     for(auto hop = 0; hop < hopsPerBlock; ++hop)
     {
         //Copy hopSize buffer samples to larger buffer for FFT processing
-        juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.getReadPointer(0) + hop * hopSize, hopSize);
+        juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.getReadPointer(channel) + hop * hopSize, hopSize);
+        
+ 
         
         sampsAccumulated += hopSize;
         if(sampsAccumulated >= fftSize)
@@ -100,7 +101,10 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         if(!bufferFull)
             return;
         
+        //Clear used buffers for safety
         fftBuffer.clear();
+        fsigBuff1.clear();
+        fsigBuff2.clear();
         
         
         //Apply window and pass to larger array
@@ -117,29 +121,32 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         //Perform FFT, and phase vocoder transform, apply processing and return
         fftObject->performRealOnlyForwardTransform(fftBuffer.data(), true);
 
-        pvAnalyze(fftBuffer, fsigIn);
+        pvAnalyze(fftBuffer, fsigBuff1);
         
-        float pShift = pitchShiftAmt.load();
-        float blurAmt = blurAmount.load();
-        float strTime = stretchTime.load();
-        float strDen = stretchDensity.load();
-        float dAmt = delayAmt.load();
-        float dTime = delayTime.load();
-        float dfeed = feedback.load();
-        float gAmt = gateAmt.load();
-        bool  dFreqToggle = delayFreqToggle.load();
+        
+        //Load parameter values (could move this outside of hop loop, probably not a huge difference
+        //but technically this should give more fluid value changes with not much overhead
+        float pShift = pitchShiftParam.load();
+        float blurAmt = blurParam.load();
+        float strTime = stretchTimeParam.load();
+        float strDen = stretchDensityParam.load();
+        float dAmt = delayAmtParam.load();
+        float dTime = delayTimeParam.load();
+        float dfeed = feedbackParam.load();
+        float gAmt = gateAmtParam.load();
+        bool  dFreqToggle = delayFreqToggleParam.load();
         
         //Process in Spectral Domain Here
-        pShiftObj.process(pShift, fsigIn, fsigOut);
-        stretchObj2.process(strTime, strDen, fsigOut, fsigIn);
-        gateObj.process(gAmt, fsigIn);
-        delayObj.spectralStretch(dTime, dAmt, dfeed, dFreqToggle, fsigIn, fsigOut);
-        blurObj.blurFsig(blurAmt, fsigOut, fsigIn);
+        pShiftObj.process(pShift, fsigBuff1, fsigBuff2);
+        stretchObj2.process(strTime, strDen, fsigBuff2, fsigBuff1);
+        gateObj.process(gAmt, fsigBuff1);
+        delayObj.process(dTime, dAmt, dfeed, dFreqToggle, fsigBuff1, fsigBuff2);
+        blurObj.process(blurAmt, fsigBuff2, fsigBuff1);
         
-        pvSynthesize(fsigIn, fftBuffer);
+        pvSynthesize(fsigBuff1, fftBuffer);
         
         
-        ifftObject->performRealOnlyInverseTransform(fftBuffer.data());
+        fftObject->performRealOnlyInverseTransform(fftBuffer.data());
         
         
         //Apply window on output
@@ -150,14 +157,12 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer)
         addDataToOverlap(fftBuffer);
     }
     
-    //read next data and clear read portion
-    buffer.clear();
-
+    //clear buffer and read next Data
+    buffer.clear(channel, 0, buffer.getNumSamples());
     for(auto i = 0; i < buffer.getNumSamples(); ++i)
     {
         auto index = (i + overlapReadPos) % overlapBuffer.size();
-        buffer.addSample(0, i, overlapBuffer[index] * scaleFactor);
-        buffer.addSample(1, i, overlapBuffer[index] * scaleFactor);
+        buffer.addSample(channel, i, overlapBuffer[index] * scaleFactor);
         overlapBuffer[index] = 0;
     }
     
@@ -218,20 +223,22 @@ void PhaseVocoder::pvSynthesize(fsig& fsig, std::vector<float>& fftOutput)
     auto twoPi = juce::MathConstants<float>::twoPi;
     for(int i = 0; i < numBins - 1; ++i)
     {
+        //Obtian magnitude and Frequency Values
         auto mag = fsig.amplitudes[i];
         auto freq = fsig.frequencies[i];
         
+        //Calculate phase Increment based on current bin
+        //Obtain bin deviation from bin center frequency
         float binDeviation = freq - i;
-        
         float phaseIncrement = binDeviation * twoPi * (float)hopSize / (float)fftSize;
-        
         float binCenterFreq = twoPi * (float)i / (float)fftSize;
         
+        //Increment phase, wrap phase, and store for next call
         phaseIncrement += binCenterFreq * hopSize;
-        
         float outPhase = wrapPhase(phaseIncrement + lastOutputPhase[i]);
         lastOutputPhase[i] = outPhase;
         
+        //Obtain real and imaginary values, and store in output buffer
         auto real = mag * std::cos(outPhase);
         auto imag = mag * std::sin(outPhase);
         
@@ -252,37 +259,23 @@ float PhaseVocoder::wrapPhase(float phaseIn)
 void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newValue)
 {
     if(parameterID == "pitchShift")
-        pitchShiftAmt.store(newValue);
+        pitchShiftParam.store(newValue);
     else if(parameterID == "blurAmt")
-    {
-        blurAmount.store(newValue);
-        DBG("Blur Amt = " + juce::String(newValue));
-    }else if(parameterID == "stretchTime")
-    {
-        stretchTime.store(newValue);
-        DBG("Stretch Amt = " + juce::String(newValue));
-    }
+        blurParam.store(newValue);
+    else if(parameterID == "stretchTime")
+        stretchTimeParam.store(newValue);
     else if(parameterID == "stretchDensity")
-    {
-        stretchDensity.store(newValue);
-        DBG("Stretch Density = " + juce::String(newValue));
-    }else if(parameterID == "delayAmt")
-    {
-        delayAmt.store((newValue));
-        DBG("Delay Amt = " + juce::String(newValue));
-    }else if(parameterID == "delayTime")
-        delayTime.store(newValue);
+        stretchDensityParam.store(newValue);
+    else if(parameterID == "delayAmt")
+        delayAmtParam.store((newValue));
+    else if(parameterID == "delayTime")
+        delayTimeParam.store(newValue);
     else if(parameterID == "feedback")
-        feedback.store(newValue);
+        feedbackParam.store(newValue);
     else if(parameterID == "delayFreqToggle")
-    {
-        DBG("Toggle Val = " + juce::String(newValue));
-        delayFreqToggle.store(newValue);
-    }else if(parameterID == "gateAmt")
-    {
-        DBG("Gate Amount = " + juce::String(newValue));
-        gateAmt.store(newValue);
-    }
+        delayFreqToggleParam.store(newValue);
+    else if(parameterID == "gateAmt")
+        gateAmtParam.store(newValue);
         
 }
 

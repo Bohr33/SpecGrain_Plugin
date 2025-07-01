@@ -23,7 +23,8 @@ SpecGrainAudioProcessor::SpecGrainAudioProcessor()
             parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
-    pv = std::make_unique<PhaseVocoder>(parameters);
+    pvLeft = std::make_unique<PhaseVocoder>(parameters);
+    pvRight = std::make_unique<PhaseVocoder>(parameters);
 }
 
 SpecGrainAudioProcessor::~SpecGrainAudioProcessor()
@@ -100,7 +101,8 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     DBG("Preapre FFT size = " + juce::String(fftSize));
-    pv->prepare(samplesPerBlock, sampleRate, fftSize);
+    pvLeft->prepare(samplesPerBlock, sampleRate, fftSize);
+    pvRight->prepare(samplesPerBlock, sampleRate, fftSize);
 }
 
 void SpecGrainAudioProcessor::releaseResources()
@@ -132,19 +134,20 @@ bool SpecGrainAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 
     return true;
   #endif
+    
 }
 #endif
 
 void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    int numChans = getTotalNumInputChannels();
 
-    pv->process(buffer);
-    
-//    auto* channel2 = buffer.getWritePointer (1);
-//    auto* channel1 = buffer.getReadPointer(0);
-//
-//    juce::FloatVectorOperations::copy(channel2, channel1, buffer.getNumSamples());
+    pvLeft->process(buffer, 0);
+    if(numChans > 1)
+        pvRight->process(buffer, 1);
+    else
+        juce::FloatVectorOperations::copy(buffer.getWritePointer(1), buffer.getReadPointer(0), buffer.getNumSamples());
 
 }
 
@@ -186,7 +189,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
         std::make_unique<AudioParameterFloat>(ParameterID {"stretchTime", versionHint}, "Stretch Time", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"stretchDensity", versionHint}, "Stretch Density", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"delayAmt", versionHint}, "Delay Amount", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"delayTime", versionHint}, "Delay Time", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"delayTime", versionHint}, "Delay Time", 1.0f, 2000.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"feedback", versionHint}, "Feedback", 0.0f, 1.0f, 0.0f),
         std::make_unique<AudioParameterFloat>(ParameterID {"delayFreqToggle", versionHint}, "Delay Freq Toggle", 0.0f, 1.0f, 0.0f),
         std::make_unique<juce::AudioParameterFloat>(

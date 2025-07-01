@@ -35,23 +35,19 @@ public:
     PhaseVocoder(juce::AudioProcessorValueTreeState& vts);
     
     void prepare(size_t buffSize, double sampleRate, unsigned int sizeFft);
+    void process(juce::AudioBuffer<float>& buffer, int channel);
     
-    void process(juce::AudioBuffer<float>& buffer);
+    void pvAnalyze(std::vector<float>& fftInput, fsig& fsig);
+    void pvSynthesize(fsig& fsig, std::vector<float>& fftOutput);
     
     void addDataToOverlap(std::vector<float>& dataToWrite);
-    void getMagnitudePhase(std::vector<float>& complexPairs, std::vector<float>& magPhase);
-    void getRealImag(std::vector<float>& magPhase, std::vector<float>& complexPairs);
-
-    void pvAnalyze(std::vector<float>& fftInput, fsig& fsig);
-
-    void pvSynthesize(fsig& fsig, std::vector<float>& fftOutput);
     float wrapPhase(float phaseIn);
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
-    
-    
 private:
+    juce::AudioProcessorValueTreeState& valueTreeState;
+    
     double samplingRate;
     size_t bufferSize;
     size_t fftSize = 1024;
@@ -62,49 +58,47 @@ private:
     float scaleFactor = 0.5;
     int sampsAccumulated = 0;
     
-    //Parameters
-    std::atomic<float> pitchShiftAmt{1.0};
-    std::atomic<float> blurAmount{0.0};
-    std::atomic<float> stretchTime{0.0};
-    std::atomic<float> stretchDensity{0.0};
-    std::atomic<float> feedback{0.0};
-    std::atomic<float> delayAmt{0.0};
-    std::atomic<float> delayTime{0.0};
-    std::atomic<bool> delayFreqToggle{false};
-    std::atomic<float> gateAmt{0.0};
-    
+    bool bufferFull = false;
+    std::unique_ptr<Window> window;
     
     std::unique_ptr<juce::dsp::FFT> fftObject;
-    std::unique_ptr<juce::dsp::FFT> ifftObject;
     
+    //STFT Process Buffers
     unsigned int inputBufferHead;
     std::vector<float> inputBuffer;
     std::vector<float> fftBuffer;
-    
-    std::vector<float> lastInputPhase;
-    std::vector<float> lastOutputPhase;
-    
-    //Spectral Processing Buffer Objects
-    fsig fsigIn;
-    fsig fsigOut;
-    
-    PitchShift pShiftObj;
-    SpectralBlur blurObj;
-    SpectralDelay delayObj;
-    SpectralStretch stretchObj2;
-    SpectralGate gateObj;
-    
     
     unsigned int overlapReadPos = 0;
     unsigned int overlapWritePos = 0;
     std::vector<float> overlapBuffer;
     
+    //Phase Vocoder Phase Buffers
+    std::vector<float> lastInputPhase;
+    std::vector<float> lastOutputPhase;
     
-    bool bufferFull = false;
-    std::unique_ptr<Window> window;
+
     
-    juce::AudioProcessorValueTreeState& valueTreeState;
+    //Spectral Processing Buffer Objects
+    fsig fsigBuff1;
+    fsig fsigBuff2;
     
+    //Parameters
+    std::atomic<float> pitchShiftParam{1.0};
+    std::atomic<float> blurParam{0.0};
+    std::atomic<float> stretchTimeParam{0.0};
+    std::atomic<float> stretchDensityParam{0.0};
+    std::atomic<float> feedbackParam{0.0};
+    std::atomic<float> delayAmtParam{0.0};
+    std::atomic<float> delayTimeParam{0.0};
+    std::atomic<bool> delayFreqToggleParam{false};
+    std::atomic<float> gateAmtParam{0.0};
+    
+    //Spectral Processors
+    PitchShift pShiftObj;
+    SpectralBlur blurObj;
+    SpectralDelay delayObj;
+    SpectralStretch stretchObj2;
+    SpectralGate gateObj;
 };
 
 

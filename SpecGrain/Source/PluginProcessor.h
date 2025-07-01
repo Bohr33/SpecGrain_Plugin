@@ -60,17 +60,9 @@ public:
     unsigned int fftSize = 1024;
 
 private:
-    std::unique_ptr<PhaseVocoder> pv;
+    std::unique_ptr<PhaseVocoder> pvLeft;
+    std::unique_ptr<PhaseVocoder> pvRight;
     juce::AudioProcessorValueTreeState parameters;
-    
-    
-    std::atomic<float>* pitchParameter = nullptr;
-    std::atomic<float>* blurParameter = nullptr;
-    std::atomic<float>* strTimeParameter = nullptr;
-    std::atomic<float>* strDenParameter = nullptr;
-    std::atomic<float>* delayParameter = nullptr;
-    std::atomic<float>* delayFreqToggleParameter = nullptr;
-    
     
     
     //==============================================================================

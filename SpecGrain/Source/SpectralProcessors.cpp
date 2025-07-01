@@ -51,7 +51,7 @@ void SpectralBlur::prepare(size_t nBins)
         f.resize(numBins);
 }
 
-void SpectralBlur::blurFsig(float blurAmt, fsig& fsigIn, fsig& fsigOut)
+void SpectralBlur::process(float blurAmt, fsig& fsigIn, fsig& fsigOut)
 {
     //copy currenty fsig into buffer
     blurBuffer[blurWriteIndex] = fsigIn;
@@ -114,13 +114,12 @@ void SpectralStretch::process(float stretchTime, float stretchDensity, fsig& inp
     int numFrames = maxFrames * stretchTime;
     
     //Each increment, increase (decrease) buffer index by 1 - stretch amount
-    float indexDelta = numFrames / (stretchDensity * 10);
+    float indexDelta = numFrames / (stretchDensity * 100);
     
     float index = wrapFloatIndex(writeIndex, maxFrames);
     
     //cacluate number of iterations needed
     float numIterations = numFrames / indexDelta;
-    numIterations = juce::jmin<float>(numIterations, 100.0);
     
     //increment and total length cancel out to give maxFrames as number of iterations
     for(int j = 0; j < (int) numIterations; j++)
@@ -157,23 +156,31 @@ void SpectralStretch::interpFsig(float index, std::vector<fsig>& buffer, fsig& o
 }
 
 
-void SpectralDelay::prepare(size_t nBins)
+void SpectralDelay::prepare(size_t nBins, double sampleRate, size_t hSize)
 {
+    sr = sampleRate;
     numBins = nBins;
+    hopSize = hSize;
+    maxDelayFrames = sr * 2 / hSize;
     delayBuffer.resize(maxDelayFrames);
     for(auto& f : delayBuffer)
         f.resize(numBins);
 }
 
-void SpectralDelay::spectralStretch(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut)
+void SpectralDelay::process(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut)
 {
     float freqTogVal = freqToggle ? 1.0 : 0.0;
+    float fback = juce::jlimit<float>(0.0, 0.99, feedback);
     
-    writeIndex = (writeIndex + 1) % maxDelayFrames;
+    float dtimeSamps = (delayTime/1000.0f)*sr;
+    int dTimeFrames = dtimeSamps / hopSize;
     
     fsigOut = fsigIn;
+    writeIndex = (writeIndex + 1) % maxDelayFrames;
     
-    int delayReadIndex = ((writeIndex - juce::roundToInt(delayTime * maxDelayFrames)) + maxDelayFrames) % maxDelayFrames;
+    
+    
+    int delayReadIndex = ((writeIndex - juce::roundToInt(dTimeFrames)) + maxDelayFrames) % maxDelayFrames;
     
     for(int bin = 0; bin < numBins; bin++)
     {
@@ -182,11 +189,15 @@ void SpectralDelay::spectralStretch(float delayTime, float delayAmt, float feedb
         auto delayAmp = delayBuffer[delayReadIndex].amplitudes[bin];
         auto delayFreq = delayBuffer[delayReadIndex].frequencies[bin];
         
+        //Ensure amp and Freq values are safe
+        if (!std::isfinite(delayAmp)) delayAmp = 0.0f;
+        if (!std::isfinite(delayFreq)) delayFreq = 0.0f;
+        
         fsigOut.amplitudes[bin] += delayAmp * delayAmt;
         fsigOut.frequencies[bin] += delayFreq * delayAmt * freqTogVal;
         
-        delayBuffer[writeIndex].amplitudes[bin] = ampIn + delayAmp * feedback;
-        delayBuffer[writeIndex].frequencies[bin] = freqIn + delayFreq * feedback;
+        delayBuffer[writeIndex].amplitudes[bin] = ampIn + delayAmp * fback;
+        delayBuffer[writeIndex].frequencies[bin] = freqIn + delayFreq * fback;
     }
 }
 

@@ -83,7 +83,7 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     gateSlider.setSkewFactorFromMidPoint(0.1);
     gateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
-    gateSliderLabel.setText("gateAmt", juce::NotificationType::dontSendNotification);
+    gateSliderLabel.setText("Gate Amount", juce::NotificationType::dontSendNotification);
     gateSliderLabel.setJustificationType(juce::Justification::centred);
 
     
@@ -91,6 +91,8 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     fftSizeMenu.addItem("1024", 2);
     fftSizeMenu.addItem("2048", 3);
     fftSizeMenu.setSelectedId(2);
+    
+    fftSizeLabel.setText("FFT Size", juce::NotificationType::dontSendNotification);
     
     fftSizeMenu.onChange = [this](){
         switch (fftSizeMenu.getSelectedId()) {
@@ -134,6 +136,7 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     addAndMakeVisible(&gateSliderLabel);
     
     addAndMakeVisible(&fftSizeMenu);
+    addAndMakeVisible(&fftSizeLabel);
 }
 
 SpecGrainAudioProcessorEditor::~SpecGrainAudioProcessorEditor()
@@ -159,17 +162,21 @@ void SpecGrainAudioProcessorEditor::resized()
     int sliderWidth = width / numSliders;
     int sliderHeight = 100;
     int labelHeight = 40;
-    
-    
+
     //Bottom Row
     int row1Y = height - sliderHeight - labelHeight;
     int rowX = 0;
     int buttonWidth = sliderWidth;
     int buttonHeight = labelHeight;
     
+    //Extras
+    int extrasY = 50;
+    int extrasXPadding = 60;
+    
     //Top Row Extras
-    delayFreqButton.setBounds(5 + sliderWidth - 10 + 5, 5, buttonWidth, buttonHeight);
-    fftSizeMenu.setBounds(5, 5, sliderWidth - 10, 30);
+    delayFreqButton.setBounds(width - (buttonWidth + extrasXPadding), extrasY + 20, buttonWidth, buttonHeight);
+    fftSizeLabel.setBounds(extrasXPadding, extrasY, sliderWidth - 10, 30);
+    fftSizeMenu.setBounds(extrasXPadding, extrasY + 30, sliderWidth - 10, 30);
     
     //Second Row
     int row2Y = row1Y - sliderHeight - labelHeight;
@@ -183,17 +190,16 @@ void SpecGrainAudioProcessorEditor::resized()
     stretchDensitySlider.setBounds(rowX + sliderWidth * 2, row2Y, sliderWidth, sliderHeight);
     stretchDensitySliderLabel.setBounds(rowX + sliderWidth * 2, row2Y + sliderHeight, sliderWidth, labelHeight);
     
-    gateSlider.setBounds(rowX + sliderWidth * 3, row2Y, sliderWidth, sliderHeight);
-    gateSliderLabel.setBounds(rowX + sliderWidth * 3, row2Y + sliderHeight, sliderWidth, labelHeight);
-    
+    stretchTimeSlider.setBounds(rowX + sliderWidth * 3, row2Y, sliderWidth, sliderHeight);
+    stretchTimeSliderLabel.setBounds(rowX + sliderWidth * 3, row2Y + sliderHeight, sliderWidth, labelHeight);
     
 
     //Bottom Row Sliders
-    delayTimeSlider.setBounds(rowX, row1Y, sliderWidth, sliderHeight);
-    delayTimeSliderLabel.setBounds(rowX, row1Y + sliderHeight, sliderWidth, labelHeight);
+    gateSlider.setBounds(rowX, row1Y, sliderWidth, sliderHeight);
+    gateSliderLabel.setBounds(rowX, row1Y + sliderHeight, sliderWidth, labelHeight);
     
-    stretchTimeSlider.setBounds(rowX + sliderWidth , row1Y, sliderWidth, sliderHeight);
-    stretchTimeSliderLabel.setBounds(rowX + sliderWidth, row1Y + sliderHeight, sliderWidth, labelHeight);
+    delayTimeSlider.setBounds(rowX + sliderWidth , row1Y, sliderWidth, sliderHeight);
+    delayTimeSliderLabel.setBounds(rowX + sliderWidth, row1Y + sliderHeight, sliderWidth, labelHeight);
     
     delayAmtSlider.setBounds(rowX + 2 * sliderWidth , row1Y, sliderWidth, sliderHeight);
     delayAmtSliderLabel.setBounds(rowX + 2 * sliderWidth, row1Y + sliderHeight, sliderWidth, labelHeight);
