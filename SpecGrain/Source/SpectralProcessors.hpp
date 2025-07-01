@@ -35,7 +35,7 @@ private:
     size_t numBins;
     std::vector<fsig> blurBuffer;
     int blurWriteIndex = 0;
-    int maxBlurFrames = 600;
+    int maxBlurFrames = 300;
 };
 
 class SpectralStretch
@@ -57,9 +57,9 @@ private:
     fsig processBuffer;
     unsigned int writeIndex = 0;
     
-    float spacing;
-    
-    unsigned int maxFrames = 1000;
+    //Don't make this too high, at fftSize = 2048, this can get out of hand and
+    //allocate too much memory at once
+    size_t maxFrames = 200;
     
 };
 

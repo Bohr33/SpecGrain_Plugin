@@ -104,7 +104,6 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
                 break;
             case 3:
                 audioProcessor.fftSize = 2048;
-                DBG("2048 selected");
                 break;
             default:
                 audioProcessor.fftSize = 1024;

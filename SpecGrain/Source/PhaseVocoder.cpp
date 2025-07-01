@@ -41,23 +41,34 @@ PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : valueTreeS
 
 void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int sizeFft)
 {
+    buffersReady.store(false);
     fftSize = sizeFft;
     samplingRate = sampleRate;
     bufferSize = buffSize;
+    hopSize = fftSize / 8;
     hopsPerBlock = bufferSize / hopSize;
+    numBins = fftSize / 2 + 1;
+    
+    //Reset indecies
+    sampsAccumulated = 0;
+    overlapReadPos = 0;
+    overlapWritePos = 0;
+    inputBufferHead = 0;
     
     auto fftOrder = std::log2(fftSize);
     fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
-    
     window = std::make_unique<Window>(fftSize);
     
-    pShiftObj.prepare(numBins);
-    blurObj.prepare(numBins);
-    delayObj.prepare(numBins, sampleRate, hopSize);
-    stretchObj2.prepare(numBins);
-    gateObj.prepare(numBins);
+    //Clear all vectors
+    juce::FloatVectorOperations::clear(inputBuffer.data(), inputBuffer.size());
+    juce::FloatVectorOperations::clear(fftBuffer.data(), fftBuffer.size());
+    juce::FloatVectorOperations::clear(lastInputPhase.data(), lastOutputPhase.size());
+    fsigBuff1.clear();
+    fsigBuff2.clear();
+    juce::FloatVectorOperations::clear(overlapBuffer.data(), overlapBuffer.size());
     
     
+    //Resize al vectors
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
     
@@ -66,13 +77,16 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     
     fsigBuff1.resize(numBins);
     fsigBuff2.resize(numBins);
-    
-    lastInputPhase.clear();
-    lastOutputPhase.clear();
 
     
     overlapBuffer.resize(fftSize * 2);
     bufferFull = false;
+    
+    pShiftObj.prepare(numBins);
+    blurObj.prepare(numBins);
+    delayObj.prepare(numBins, sampleRate, hopSize);
+    stretchObj.prepare(numBins);
+    gateObj.prepare(numBins);
     
     DBG("Prepared Successfully");
     DBG("Buffer Size = " + juce::String(bufferSize));
@@ -80,19 +94,28 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     DBG("Hop Size = " + juce::String(hopSize));
     DBG("Hops Per Block = " + juce::String(hopsPerBlock));
     
+    //Make true so processing loop begins
+    buffersReady.store(true);
 }
 
 void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
 {
+    
+    if(!buffersReady)
+    {
+        buffer.clear();
+        return;
+    }
+    
     //Perform stft operation for as many hop sizes
     //within 1 buffersize
     for(auto hop = 0; hop < hopsPerBlock; ++hop)
     {
+        
         //Copy hopSize buffer samples to larger buffer for FFT processing
         juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.getReadPointer(channel) + hop * hopSize, hopSize);
         
  
-        
         sampsAccumulated += hopSize;
         if(sampsAccumulated >= fftSize)
             bufferFull = true;
@@ -102,10 +125,9 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
             return;
         
         //Clear used buffers for safety
-        fftBuffer.clear();
+        juce::FloatVectorOperations::fill(fftBuffer.data(), 0.0, fftBuffer.size());
         fsigBuff1.clear();
         fsigBuff2.clear();
-        
         
         //Apply window and pass to larger array
         for(int i = 0; i < fftSize; ++i)
@@ -138,7 +160,7 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
         
         //Process in Spectral Domain Here
         pShiftObj.process(pShift, fsigBuff1, fsigBuff2);
-        stretchObj2.process(strTime, strDen, fsigBuff2, fsigBuff1);
+        stretchObj.process(strTime, strDen, fsigBuff2, fsigBuff1);
         gateObj.process(gAmt, fsigBuff1);
         delayObj.process(dTime, dAmt, dfeed, dFreqToggle, fsigBuff1, fsigBuff2);
         blurObj.process(blurAmt, fsigBuff2, fsigBuff1);

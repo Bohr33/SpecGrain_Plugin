@@ -11,6 +11,7 @@
 void PitchShift::prepare(size_t nBins)
 {
     numBins = nBins;
+    DBG("Prepared Pitch Shift");
 }
 
 void PitchShift::process(float shiftAmt, fsig& fsigIn, fsig& fsigOut)
@@ -46,9 +47,13 @@ void PitchShift::process(float shiftAmt, fsig& fsigIn, fsig& fsigOut)
 void SpectralBlur::prepare(size_t nBins)
 {
     numBins = nBins;
+    blurWriteIndex = 0;
+    
     blurBuffer.resize(maxBlurFrames);
     for(auto& f : blurBuffer)
         f.resize(numBins);
+    
+    DBG("Prepared Blur");
 }
 
 void SpectralBlur::process(float blurAmt, fsig& fsigIn, fsig& fsigOut)
@@ -57,7 +62,7 @@ void SpectralBlur::process(float blurAmt, fsig& fsigIn, fsig& fsigOut)
     blurBuffer[blurWriteIndex] = fsigIn;
     
     int blurFrames = juce::roundToInt(blurAmt * maxBlurFrames);
-    blurWriteIndex = (blurWriteIndex + 1) % maxBlurFrames;
+    
     
     if(blurFrames == 0)
     {
@@ -79,20 +84,21 @@ void SpectralBlur::process(float blurAmt, fsig& fsigIn, fsig& fsigOut)
         fsigOut.amplitudes[bin] = amp / blurFrames;
         fsigOut.frequencies[bin] = freq / blurFrames;
     }
+    blurWriteIndex = (blurWriteIndex + 1) % maxBlurFrames;
 }
 
 
 void SpectralStretch::prepare(size_t nBins)
 {
     numBins = nBins;
+    writeIndex = 0;
+    
     fBuffer.resize(maxFrames);
     for(auto& f : fBuffer)
         f.resize(numBins);
     
     processBuffer.resize(numBins);
-    
-    //test spacing
-    spacing = 40;
+    DBG("Prepared Stretch");
 }
 
 void SpectralStretch::process(float stretchTime, float stretchDensity, fsig& input, fsig& output)
@@ -114,7 +120,7 @@ void SpectralStretch::process(float stretchTime, float stretchDensity, fsig& inp
     int numFrames = maxFrames * stretchTime;
     
     //Each increment, increase (decrease) buffer index by 1 - stretch amount
-    float indexDelta = numFrames / (stretchDensity * 100);
+    float indexDelta = numFrames / (stretchDensity * 50);
     
     float index = wrapFloatIndex(writeIndex, maxFrames);
     
@@ -161,10 +167,15 @@ void SpectralDelay::prepare(size_t nBins, double sampleRate, size_t hSize)
     sr = sampleRate;
     numBins = nBins;
     hopSize = hSize;
-    maxDelayFrames = sr * 2 / hSize;
+    maxDelayFrames = sr * maxDelaySeconds / hSize;
+
+    writeIndex = 0;
+    
     delayBuffer.resize(maxDelayFrames);
     for(auto& f : delayBuffer)
         f.resize(numBins);
+    
+    DBG("Prepared Delay");
 }
 
 void SpectralDelay::process(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut)
@@ -173,32 +184,34 @@ void SpectralDelay::process(float delayTime, float delayAmt, float feedback, boo
     float fback = juce::jlimit<float>(0.0, 0.99, feedback);
     
     float dtimeSamps = (delayTime/1000.0f)*sr;
-    int dTimeFrames = dtimeSamps / hopSize;
+    int dTimeFrames = static_cast<int>(dtimeSamps / hopSize);
     
-    fsigOut = fsigIn;
-    writeIndex = (writeIndex + 1) % maxDelayFrames;
-    
-    
-    
-    int delayReadIndex = ((writeIndex - juce::roundToInt(dTimeFrames)) + maxDelayFrames) % maxDelayFrames;
-    
-    for(int bin = 0; bin < numBins; bin++)
+    int maxSafeDelay = maxDelayFrames - 1;
+    int clampedDelayFrames = std::min(dTimeFrames, maxSafeDelay);
+    int delayReadIndex = (writeIndex - clampedDelayFrames + maxDelayFrames) % maxDelayFrames;
+
+    fsigOut = fsigIn; // assumes this is a deep copy
+
+    for (int bin = 0; bin < numBins; ++bin)
     {
-        auto ampIn = fsigIn.amplitudes[bin];
-        auto freqIn = fsigIn.frequencies[bin];
-        auto delayAmp = delayBuffer[delayReadIndex].amplitudes[bin];
-        auto delayFreq = delayBuffer[delayReadIndex].frequencies[bin];
-        
-        //Ensure amp and Freq values are safe
+        float ampIn = fsigIn.amplitudes[bin];
+        float freqIn = fsigIn.frequencies[bin];
+
+        float delayAmp = delayBuffer[delayReadIndex].amplitudes[bin];
+        float delayFreq = delayBuffer[delayReadIndex].frequencies[bin];
+
         if (!std::isfinite(delayAmp)) delayAmp = 0.0f;
         if (!std::isfinite(delayFreq)) delayFreq = 0.0f;
-        
+
         fsigOut.amplitudes[bin] += delayAmp * delayAmt;
         fsigOut.frequencies[bin] += delayFreq * delayAmt * freqTogVal;
-        
+
         delayBuffer[writeIndex].amplitudes[bin] = ampIn + delayAmp * fback;
         delayBuffer[writeIndex].frequencies[bin] = freqIn + delayFreq * fback;
     }
+
+    writeIndex = (writeIndex + 1) % maxDelayFrames;
+
 }
 
 

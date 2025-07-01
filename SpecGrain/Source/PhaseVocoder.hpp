@@ -42,6 +42,10 @@ public:
     
     void addDataToOverlap(std::vector<float>& dataToWrite);
     float wrapPhase(float phaseIn);
+    void stopProcessingForBufferResize()
+    {
+        buffersReady.store(false);
+    }
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
@@ -50,10 +54,10 @@ private:
     
     double samplingRate;
     size_t bufferSize;
-    size_t fftSize = 1024;
-    size_t hopSize = fftSize / 8;
+    size_t fftSize;
+    size_t hopSize;
     size_t hopsPerBlock;
-    size_t numBins = fftSize / 2 + 1;
+    size_t numBins;
 
     float scaleFactor = 0.5;
     int sampsAccumulated = 0;
@@ -93,11 +97,13 @@ private:
     std::atomic<bool> delayFreqToggleParam{false};
     std::atomic<float> gateAmtParam{0.0};
     
+    std::atomic<bool> buffersReady{false};
+    
     //Spectral Processors
     PitchShift pShiftObj;
     SpectralBlur blurObj;
     SpectralDelay delayObj;
-    SpectralStretch stretchObj2;
+    SpectralStretch stretchObj;
     SpectralGate gateObj;
 };
 

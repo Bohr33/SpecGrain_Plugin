@@ -101,6 +101,10 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     DBG("Preapre FFT size = " + juce::String(fftSize));
+    
+    //Must stop processing until all buffers resizes are completely
+    pvLeft->stopProcessingForBufferResize();
+    pvRight->stopProcessingForBufferResize();
     pvLeft->prepare(samplesPerBlock, sampleRate, fftSize);
     pvRight->prepare(samplesPerBlock, sampleRate, fftSize);
 }
