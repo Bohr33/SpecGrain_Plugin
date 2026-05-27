@@ -62,6 +62,7 @@ public:
 private:
     std::unique_ptr<PhaseVocoder> pvLeft;
     std::unique_ptr<PhaseVocoder> pvRight;
+    
     juce::AudioProcessorValueTreeState parameters;
     
     

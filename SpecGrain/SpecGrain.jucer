@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="VYGjwP" name="SpecGrain" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginFormats="buildAU,buildAUv3,buildVST3">
   <MAINGROUP id="ot0lOV" name="SpecGrain">
+    <GROUP id="{3A887F4C-CA58-86DC-B7C0-DFCF3E0D1C11}" name="New Group"/>
     <GROUP id="{31CF6EEB-29C9-6A06-BBF6-253EC601B5D6}" name="Source">
+      <FILE id="kxhpA2" name="Graphics.cpp" compile="1" resource="0" file="Source/Graphics.cpp"/>
+      <FILE id="U33mdU" name="Graphics.h" compile="0" resource="0" file="Source/Graphics.h"/>
+      <FILE id="n17ZgV" name="Fsig.h" compile="0" resource="0" file="Source/Fsig.h"/>
+      <FILE id="M2r4pA" name="PhaseVocoder.cpp" compile="1" resource="0"
+            file="Source/PhaseVocoder.cpp"/>
+      <FILE id="KaPq7t" name="PhaseVocoder.hpp" compile="0" resource="0"
+            file="Source/PhaseVocoder.hpp"/>
+      <FILE id="A281dW" name="SpectralProcessors.cpp" compile="1" resource="0"
+            file="Source/SpectralProcessors.cpp"/>
+      <FILE id="slEl4Y" name="SpectralProcessors.hpp" compile="0" resource="0"
+            file="Source/SpectralProcessors.hpp"/>
       <FILE id="uM5pL8" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="LgWzjZ" name="PluginProcessor.h" compile="0" resource="0"
@@ -12,6 +24,10 @@
             file="Source/PluginEditor.cpp"/>
       <FILE id="loKspY" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
+    <FILE id="Rmxdqx" name="PhaseVocoderV2.cpp" compile="1" resource="0"
+          file="Source/PhaseVocoderV2.cpp"/>
+    <FILE id="KE1ksj" name="PhaseVocoderV2.h" compile="0" resource="0"
+          file="Source/PhaseVocoderV2.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
