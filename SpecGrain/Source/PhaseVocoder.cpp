@@ -1,74 +1,53 @@
-//
-//  PhaseVocoder.cpp
-//  SpecGrain
-//
-//  Created by Benjamin Ward (Old Computer) on 6/18/25.
-//
+/*
+  ==============================================================================
 
-#include "PhaseVocoder.hpp"
+    PhaseVocoder.cpp
+    Created: 26 May 2026 11:30:24pm
+    Author:  Benjamin Ward (Old Computer)
 
-Window::Window(size_t size) : windowSize(size)
-{
-    window.resize(windowSize);
-    makeWindow();
-}
+  ==============================================================================
+*/
 
-void Window::makeWindow()
-{
-    for (int i = 0; i < windowSize; ++i)
-        window[i] = 0.5 * (1 - std::cos((juce::MathConstants<double>::twoPi * i)/(windowSize-1)));
-}
-
-float Window::getRawValue(unsigned int index)
-{
-    return window[index];
-}
+#include "PhaseVocoder.h"
 
 
-
-PhaseVocoder::PhaseVocoder(juce::AudioProcessorValueTreeState& vts) : valueTreeState(vts)
-{
-    valueTreeState.addParameterListener("pitchShift", this);
-    valueTreeState.addParameterListener("blurAmt", this);
-    valueTreeState.addParameterListener("stretchTime", this);
-    valueTreeState.addParameterListener("delayAmt", this);
-    valueTreeState.addParameterListener("delayTime", this);
-    valueTreeState.addParameterListener("feedback", this);
-    valueTreeState.addParameterListener("delayFreqToggle", this);
-    valueTreeState.addParameterListener("stretchDensity", this);
-    valueTreeState.addParameterListener("gateAmt", this);
-}
+PhaseVocoder::PhaseVocoder()
+{}
 
 void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int sizeFft)
 {
-    buffersReady.store(false);
     fftSize = sizeFft;
     samplingRate = sampleRate;
     bufferSize = buffSize;
-    hopSize = fftSize / 8;
-    hopsPerBlock = bufferSize / hopSize;
+    hopSize = fftSize / overlapAmount;
+    
+    hopsPerBlock = buffSize / hopSize;
     numBins = fftSize / 2 + 1;
+    
     
     //Reset indecies
     sampsAccumulated = 0;
     overlapReadPos = 0;
-    overlapWritePos = 0;
+    
+    //Overlap write must start 'fftSize' ahead of read
+    overlapWritePos = (int) fftSize;
     inputBufferHead = 0;
     
     auto fftOrder = std::log2(fftSize);
     fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     window = std::make_unique<Window>(fftSize);
     
-    //Clear all vectors
-    juce::FloatVectorOperations::clear(inputBuffer.data(), inputBuffer.size());
-    juce::FloatVectorOperations::clear(fftBuffer.data(), fftBuffer.size());
-    juce::FloatVectorOperations::clear(lastInputPhase.data(), lastOutputPhase.size());
-    fsigBuff1.clear();
-    fsigBuff2.clear();
-    juce::FloatVectorOperations::clear(overlapBuffer.data(), overlapBuffer.size());
+    gainCompensation = 0.0f;
+    for(int i = 0; i < fftSize; i++)
+    {
+        auto val = window->getValue(i);
+        gainCompensation += val*val;
+    }
+    gainCompensation /= hopSize;
+    gainCompensation = 1.0f / gainCompensation;
     
-    
-    //Resize al vectors
+
+    //Resize all vectors
     inputBuffer.resize(fftSize);
     fftBuffer.resize(fftSize*2);
     
@@ -76,46 +55,53 @@ void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int size
     lastOutputPhase.resize(fftSize/2);
     
     fsigBuff1.resize(numBins);
-    fsigBuff2.resize(numBins);
-
+    
+    
+    frameBuffer.resize(hopsPerBlock);
+    for(auto& frame : frameBuffer)
+        frame.resize(numBins);
+    
+    bufferCounter = 0;
     
     overlapBuffer.resize(fftSize * 2);
     bufferFull = false;
     
-    pShiftObj.prepare(numBins);
-    blurObj.prepare(numBins);
-    delayObj.prepare(numBins, sampleRate, hopSize);
-    stretchObj.prepare(numBins);
-    gateObj.prepare(numBins);
     
-    DBG("Prepared Successfully");
-    DBG("Buffer Size = " + juce::String(bufferSize));
-    DBG("FFT Size = " + juce::String(fftSize));
-    DBG("Hop Size = " + juce::String(hopSize));
-    DBG("Hops Per Block = " + juce::String(hopsPerBlock));
     
-    //Make true so processing loop begins
-    buffersReady.store(true);
+    DBG("fftSize: " << fftSize);
+    DBG("hopSize: " << hopSize);
+    DBG("hopsPerBlock: " << hopsPerBlock);
+    DBG("bufferSize: " << bufferSize);
+    
+    //Clear all vectors, just zeros the data, doesn't do vector.clear()
+    juce::FloatVectorOperations::clear(inputBuffer.data(), inputBuffer.size());
+    juce::FloatVectorOperations::clear(fftBuffer.data(), fftBuffer.size());
+    juce::FloatVectorOperations::clear(lastInputPhase.data(), lastInputPhase.size());
+    juce::FloatVectorOperations::clear(lastOutputPhase.data(), lastOutputPhase.size());
+    fsigBuff1.clear();
+    juce::FloatVectorOperations::clear(overlapBuffer.data(), overlapBuffer.size());
+    
+    for(fsig frame : frameBuffer)
+        frame.clear();
+
 }
 
-void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
+void PhaseVocoder::pushSamples(std::span<const float> buffer)
 {
     
-    if(!buffersReady)
-    {
-        buffer.clear();
+    //Perform check to make sure buffer size is equal to hops per block?
+    if (buffer.size() < bufferSize) {
         return;
     }
     
-    //Perform stft operation for as many hop sizes
-    //within 1 buffersize
+    
     for(auto hop = 0; hop < hopsPerBlock; ++hop)
     {
         
         //Copy hopSize buffer samples to larger buffer for FFT processing
-        juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.getReadPointer(channel) + hop * hopSize, hopSize);
+        juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.data() + hop * hopSize, hopSize);
         
- 
+        
         sampsAccumulated += hopSize;
         if(sampsAccumulated >= fftSize)
             bufferFull = true;
@@ -127,13 +113,12 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
         //Clear used buffers for safety
         juce::FloatVectorOperations::fill(fftBuffer.data(), 0.0, fftBuffer.size());
         fsigBuff1.clear();
-        fsigBuff2.clear();
         
         //Apply window and pass to larger array
         for(int i = 0; i < fftSize; ++i)
         {
             auto readIndex = (inputBufferHead + i) % fftSize;
-            fftBuffer[i] = window->getRawValue(i) * inputBuffer[readIndex];
+            fftBuffer[i] = window->getValue(i) * inputBuffer[readIndex];
         }
         
         inputBufferHead += hopSize;
@@ -142,54 +127,52 @@ void PhaseVocoder::process(juce::AudioBuffer<float>& buffer, int channel)
         
         //Perform FFT, and phase vocoder transform, apply processing and return
         fftObject->performRealOnlyForwardTransform(fftBuffer.data(), true);
-
+        
+        //Perform Analysis
         pvAnalyze(fftBuffer, fsigBuff1);
         
-        
-        //Load parameter values (could move this outside of hop loop, probably not a huge difference
-        //but technically this should give more fluid value changes with not much overhead
-        float pShift = pitchShiftParam.load();
-        float blurAmt = blurParam.load();
-        float strTime = stretchTimeParam.load();
-        float strDen = stretchDensityParam.load();
-        float dAmt = delayAmtParam.load();
-        float dTime = delayTimeParam.load();
-        float dfeed = feedbackParam.load();
-        float gAmt = gateAmtParam.load();
-        bool  dFreqToggle = delayFreqToggleParam.load();
-        
-        //Process in Spectral Domain Here
-        pShiftObj.process(pShift, fsigBuff1, fsigBuff2);
-        stretchObj.process(strTime, strDen, fsigBuff2, fsigBuff1);
-        gateObj.process(gAmt, fsigBuff1);
-        delayObj.process(dTime, dAmt, dfeed, dFreqToggle, fsigBuff1, fsigBuff2);
-        blurObj.process(blurAmt, fsigBuff2, fsigBuff1);
-        
-        pvSynthesize(fsigBuff1, fftBuffer);
-        
-        
-        fftObject->performRealOnlyInverseTransform(fftBuffer.data());
-        
-        
-        //Apply window on output
-        for(int i = 0; i < fftSize; ++i)
-            fftBuffer[i] = window->getRawValue(i) * fftBuffer[i];
-
-        //Add newest data to overlap buffer
-        addDataToOverlap(fftBuffer);
+        frameBuffer[hop] = fsigBuff1;
+        bufferCounter++;
     }
+}
+
+
+void PhaseVocoder::pullSamples(std::span<float> outputBuffer)
+{
+    //This check ensure samples aren't pulled to early
+    if(bufferCounter < hopsPerBlock)
+        return;
     
-    //clear buffer and read next Data
-    buffer.clear(channel, 0, buffer.getNumSamples());
-    for(auto i = 0; i < buffer.getNumSamples(); ++i)
+    
+    // get data from overlap buffer, copy, scale, and send it to output
+    for(auto i = 0; i < outputBuffer.size(); i++)
     {
         auto index = (i + overlapReadPos) % overlapBuffer.size();
-        buffer.addSample(channel, i, overlapBuffer[index] * scaleFactor);
+        auto val = overlapBuffer[index] * gainCompensation;
+        outputBuffer[i] = val;
         overlapBuffer[index] = 0;
     }
     
+    //Increment Read Positions
     overlapReadPos += bufferSize;
     overlapReadPos %= overlapBuffer.size();
+
+    
+    
+    for(auto hop = 0; hop < hopsPerBlock; hop++)
+        {
+            pvSynthesize(frameBuffer[hop], fftBuffer);
+            
+            fftObject->performRealOnlyInverseTransform(fftBuffer.data());
+            //Apply window on output
+            for(int i = 0; i < fftSize; i++)
+                fftBuffer[i] = window->getValue(i) * fftBuffer[i];
+
+            //Add newest data to overlap buffer
+            addDataToOverlap(fftBuffer);
+        }
+    
+
 }
 
 void PhaseVocoder::addDataToOverlap(std::vector<float>& dataToWrite)
@@ -205,8 +188,7 @@ void PhaseVocoder::addDataToOverlap(std::vector<float>& dataToWrite)
 
 void PhaseVocoder::pvAnalyze(std::vector<float>& fftInput, fsig& fsig)
 {
-    auto twoPi = juce::MathConstants<float>::twoPi;
-    
+
     for(int i = 0; i < numBins - 1; ++i)
     {
         auto real = fftInput[i * 2];
@@ -242,7 +224,7 @@ void PhaseVocoder::pvAnalyze(std::vector<float>& fftInput, fsig& fsig)
 
 void PhaseVocoder::pvSynthesize(fsig& fsig, std::vector<float>& fftOutput)
 {
-    auto twoPi = juce::MathConstants<float>::twoPi;
+    
     for(int i = 0; i < numBins - 1; ++i)
     {
         //Obtian magnitude and Frequency Values
@@ -257,7 +239,8 @@ void PhaseVocoder::pvSynthesize(fsig& fsig, std::vector<float>& fftOutput)
         
         //Increment phase, wrap phase, and store for next call
         phaseIncrement += binCenterFreq * hopSize;
-        float outPhase = wrapPhase(phaseIncrement + lastOutputPhase[i]);
+        
+        float outPhase = phaseIncrement + lastOutputPhase[i];
         lastOutputPhase[i] = outPhase;
         
         //Obtain real and imaginary values, and store in output buffer
@@ -278,26 +261,8 @@ float PhaseVocoder::wrapPhase(float phaseIn)
         return fmodf(phaseIn - pi, -2.0 * pi) + pi;
 }
 
-void PhaseVocoder::parameterChanged(const juce::String& parameterID, float newValue)
-{
-    if(parameterID == "pitchShift")
-        pitchShiftParam.store(newValue);
-    else if(parameterID == "blurAmt")
-        blurParam.store(newValue);
-    else if(parameterID == "stretchTime")
-        stretchTimeParam.store(newValue);
-    else if(parameterID == "stretchDensity")
-        stretchDensityParam.store(newValue);
-    else if(parameterID == "delayAmt")
-        delayAmtParam.store((newValue));
-    else if(parameterID == "delayTime")
-        delayTimeParam.store(newValue);
-    else if(parameterID == "feedback")
-        feedbackParam.store(newValue);
-    else if(parameterID == "delayFreqToggle")
-        delayFreqToggleParam.store(newValue);
-    else if(parameterID == "gateAmt")
-        gateAmtParam.store(newValue);
-        
-}
 
+std::vector<fsig>& PhaseVocoder::getFsigBuffer()
+{
+    return frameBuffer;
+}

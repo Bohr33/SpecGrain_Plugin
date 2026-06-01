@@ -9,7 +9,9 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "PhaseVocoder.hpp"
+#include "PhaseVocoder.h"
+#include "SpectralProcessors.hpp"
+#include "PhaseVocoderEngine.h"
 
 //==============================================================================
 /**
@@ -58,12 +60,38 @@ public:
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     
     unsigned int fftSize = 1024;
+    
+    void fftSizeChanged(int newFFTsize);
 
 private:
-    std::unique_ptr<PhaseVocoder> pvLeft;
-    std::unique_ptr<PhaseVocoder> pvRight;
+    
+    std::unique_ptr<PhaseVocoderEngine> pvEngine;
     
     juce::AudioProcessorValueTreeState parameters;
+    
+
+    std::vector<PitchShift> pShifts;
+    std::vector<SpectralBlur> specBlurs;
+    std::vector<SpectralStretch> specStretchs;
+    std::vector<SpectralDelay> specDelays;
+    std::vector<SpectralGate> specGates;
+    
+    
+    std::atomic<float>* pShiftParam = nullptr;
+    std::atomic<float>* blurParam = nullptr;
+    std::atomic<float>* stretchTimeParam = nullptr;
+    std::atomic<float>* stretchDensityParam = nullptr;
+    std::atomic<float>* delayAmtParam = nullptr;
+    std::atomic<float>* delayTimeParam = nullptr;
+    std::atomic<float>* feedbackParam = nullptr;
+    std::atomic<float>* gateAmtParam = nullptr;
+    std::atomic<float>* delayFreqToggleParam = nullptr;
+    
+    
+    //Flags for FFT Resizing
+    std::atomic<int> pendingFFTSize {1024};
+    std::atomic<bool> resizePending {false};
+    
     
     
     //==============================================================================

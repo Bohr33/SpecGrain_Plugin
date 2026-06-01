@@ -23,8 +23,18 @@ SpecGrainAudioProcessor::SpecGrainAudioProcessor()
             parameters(*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
-    pvLeft = std::make_unique<PhaseVocoder>(parameters);
-    pvRight = std::make_unique<PhaseVocoder>(parameters);
+    pvEngine = std::make_unique<PhaseVocoderEngine>();
+    
+    //Attach Parameters to Atomics
+    pShiftParam = parameters.getRawParameterValue("PITCH_SHIFT");
+    blurParam = parameters.getRawParameterValue("BLUR_AMOUNT");
+    stretchTimeParam = parameters.getRawParameterValue("STRETCH_TIME");
+    stretchDensityParam = parameters.getRawParameterValue("STRETCH_DENSITY");
+    delayAmtParam = parameters.getRawParameterValue("DELAY_AMOUNT");
+    delayTimeParam = parameters.getRawParameterValue("DELAY_TIME");
+    feedbackParam = parameters.getRawParameterValue("DELAY_FEEDBACK");
+    delayFreqToggleParam = parameters.getRawParameterValue("DELAY_FREQUENCY_TOGGLE");
+    gateAmtParam = parameters.getRawParameterValue("GATE_AMOUNT");
 }
 
 SpecGrainAudioProcessor::~SpecGrainAudioProcessor()
@@ -98,15 +108,29 @@ void SpecGrainAudioProcessor::changeProgramName (int index, const juce::String& 
 //==============================================================================
 void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    DBG("Preapre FFT size = " + juce::String(fftSize));
+    int numChannels = getMainBusNumInputChannels();
     
-    //Must stop processing until all buffers resizes are completely
-    pvLeft->stopProcessingForBufferResize();
-    pvRight->stopProcessingForBufferResize();
-    pvLeft->prepare(samplesPerBlock, sampleRate, fftSize);
-    pvRight->prepare(samplesPerBlock, sampleRate, fftSize);
+    
+    fftSize = pendingFFTSize.load();
+    
+    pvEngine->prepare(samplesPerBlock, sampleRate, fftSize, numChannels);
+    
+    pShifts.resize(numChannels);
+    specBlurs.resize(numChannels);
+    specDelays.resize(numChannels);
+    specStretchs.resize(numChannels);
+    specGates.resize(numChannels);
+    
+    for(int channel = 0; channel < numChannels; channel++)
+    {
+        pShifts[channel].prepare(fftSize);
+        specBlurs[channel].prepare(fftSize);
+        specDelays[channel].prepare(fftSize, sampleRate);
+        specStretchs[channel].prepare(fftSize);
+        specGates[channel].prepare(fftSize);
+    }
+    
+    resizePending.store(false);
 }
 
 void SpecGrainAudioProcessor::releaseResources()
@@ -144,15 +168,53 @@ bool SpecGrainAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 
 void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ScopedNoDenormals noDenormals;
-    int numChans = getTotalNumInputChannels();
-
-    pvLeft->process(buffer, 0);
-    if(numChans > 1)
-        pvRight->process(buffer, 1);
-    else
-        juce::FloatVectorOperations::copy(buffer.getWritePointer(1), buffer.getReadPointer(0), buffer.getNumSamples());
-
+    int numChans = getMainBusNumInputChannels();
+    
+    //Check to see if FFTsize is changed,
+    if(resizePending.load())
+    {
+        prepareToPlay(getSampleRate(), buffer.getNumSamples());
+        return;
+    }
+    
+    
+    float pShiftAmt = pShiftParam->load();
+    float blurAmt = blurParam->load();
+    float stretchTime = stretchTimeParam->load();
+    float stretchDensity = stretchDensityParam->load();
+    float delayTime = delayTimeParam->load();
+    float delayAmt = delayAmtParam->load();
+    float delayFeedback = feedbackParam->load();
+    bool delayFreqToggle = delayFreqToggleParam->load() > 0.5f;
+    float gateAmt = gateAmtParam->load();
+    
+    
+    //PV Analysis Stage
+    for(int ch = 0; ch < numChans; ch++)
+    {
+        pvEngine->pushSamples(ch, {buffer.getReadPointer(ch), (size_t) buffer.getNumSamples()});
+    };
+    
+    //Spectral Processing
+    for(int ch = 0; ch < numChans; ch++)
+    {
+        std::vector<fsig>& frames = pvEngine->getFsigBuffer(ch);
+        for(auto& frame : frames)
+        {
+            pShifts[ch].process(frame, pShiftAmt);
+            specBlurs[ch].process(frame, blurAmt);
+            specStretchs[ch].process(frame, stretchTime, stretchDensity);
+            specDelays[ch].process(frame, delayTime, delayAmt, delayFeedback, delayFreqToggle);
+            specGates[ch].process(frame, gateAmt);
+        }
+    }
+    
+    //Retrieve Samples
+    for(int ch = 0; ch < numChans; ch++)
+    {
+        pvEngine->pullSamples(ch, {buffer.getWritePointer(ch), (size_t) buffer.getNumSamples()});
+    }
+    
 }
 
 //==============================================================================
@@ -188,16 +250,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
     
     return
     {
-        std::make_unique<AudioParameterFloat>(ParameterID {"pitchShift", versionHint}, "Pitch Shift", 0.0f, 3.0f, 1.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"blurAmt", versionHint}, "Blur Amount", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"stretchTime", versionHint}, "Stretch Time", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"stretchDensity", versionHint}, "Stretch Density", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"delayAmt", versionHint}, "Delay Amount", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"delayTime", versionHint}, "Delay Time", 1.0f, 2000.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"feedback", versionHint}, "Feedback", 0.0f, 1.0f, 0.0f),
-        std::make_unique<AudioParameterFloat>(ParameterID {"delayFreqToggle", versionHint}, "Delay Freq Toggle", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"PITCH_SHIFT", versionHint}, "Pitch Shift", 0.0f, 3.0f, 1.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"BLUR_AMOUNT", versionHint}, "Blur Amount", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"STRETCH_TIME", versionHint}, "Stretch Time", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"STRETCH_DENSITY", versionHint}, "Stretch Density", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"DELAY_AMOUNT", versionHint}, "Delay Amount", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"DELAY_TIME", versionHint}, "Delay Time", 1.0f, 2000.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"DELAY_FEEDBACK", versionHint}, "Feedback", 0.0f, 1.0f, 0.0f),
+        std::make_unique<AudioParameterFloat>(ParameterID {"DELAY_FREQUENCY_TOGGLE", versionHint}, "Delay Freq Toggle", 0.0f, 1.0f, 0.0f),
         std::make_unique<juce::AudioParameterFloat>(
-            juce::ParameterID("gateAmt", 1),
+            juce::ParameterID("GATE_AMOUNT", 1),
             "Gate Amount",
             juce::NormalisableRange<float>(0.0f, 1.0f, 0.0001f),
             0.0f,
@@ -207,6 +269,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
                 return juce::String(value, 4); // 4 decimal places
             })
     };
+}
+
+
+void SpecGrainAudioProcessor::fftSizeChanged(int newFFTsize)
+{
+    pendingFFTSize.store(newFFTsize);
+    resizePending.store(true);
 }
 
 //==============================================================================

@@ -17,14 +17,14 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     // editor's size to whatever you need it to be.
     setSize (400, 400);
     
-    pitchSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "pitchShift", pitchSlider));
+    pitchSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "PITCH_SHIFT", pitchSlider));
     pitchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     pitchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
     pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
     pitchSliderLabel.setJustificationType(juce::Justification::centred);
     
-    blurSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "blurAmt", blurSlider));
+    blurSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "BLUR_AMOUNT", blurSlider));
     blurSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     blurSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
@@ -33,14 +33,14 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     
     
     //Stretch Parameters
-    stretchTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "stretchTime", stretchTimeSlider));
+    stretchTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "STRETCH_TIME", stretchTimeSlider));
     stretchTimeSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     stretchTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
     stretchTimeSliderLabel.setText("Stretch Time", juce::dontSendNotification);
     stretchTimeSliderLabel.setJustificationType(juce::Justification::centred);
     
-    stretchDensitySliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "stretchDensity", stretchDensitySlider));
+    stretchDensitySliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "STRETCH_DENSITY", stretchDensitySlider));
     stretchDensitySlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     stretchDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
@@ -48,28 +48,28 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     stretchDensitySliderLabel.setJustificationType(juce::Justification::centred);
     
     //Delay Parameters
-    delayAmtSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "delayAmt", delayAmtSlider));
+    delayAmtSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DELAY_AMOUNT", delayAmtSlider));
     delayAmtSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     delayAmtSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
     delayAmtSliderLabel.setText("Delay Amount", juce::dontSendNotification);
     delayAmtSliderLabel.setJustificationType(juce::Justification::centred);
 
-    delayTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "delayTime", delayTimeSlider));
+    delayTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DELAY_TIME", delayTimeSlider));
     delayTimeSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     delayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
     delayTimeSliderLabel.setText("Delay Time", juce::dontSendNotification);
     delayTimeSliderLabel.setJustificationType(juce::Justification::centred);
     
-    feedbackSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "feedback", feedbackSlider));
+    feedbackSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DELAY_FEEDBACK", feedbackSlider));
     feedbackSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     feedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
     feedbackLabel.setText("Feedback", juce::dontSendNotification);
     feedbackLabel.setJustificationType(juce::Justification::centred);
     
-    delayFreqButtonAttch.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "delayFreqToggle", delayFreqButton));
+    delayFreqButtonAttch.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "DELAY_FREQUENCY_TOGGLE", delayFreqButton));
     
     delayFreqButton.setToggleable(true);
     delayFreqButton.setClickingTogglesState(true);
@@ -77,7 +77,7 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     
     
     //Gate Slider
-    gateSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "gateAmt", gateSlider));
+    gateSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "GATE_AMOUNT", gateSlider));
     gateSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
     gateSlider.setRange(0.0f, 1.0f, 0.0001);
     gateSlider.setSkewFactorFromMidPoint(0.1);
@@ -95,21 +95,30 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     fftSizeLabel.setText("FFT Size", juce::NotificationType::dontSendNotification);
     
     fftSizeMenu.onChange = [this](){
+        auto lastFFTSize = audioProcessor.fftSize;
+        int newFFTSize;
         switch (fftSizeMenu.getSelectedId()) {
             case 1:
-                audioProcessor.fftSize = 512;
+                newFFTSize = 512;
                 break;
             case 2:
-                audioProcessor.fftSize = 1024;
+                newFFTSize = 1024;
                 break;
             case 3:
-                audioProcessor.fftSize = 2048;
+                newFFTSize = 2048;
                 break;
             default:
-                audioProcessor.fftSize = 1024;
+                newFFTSize = 1024;
                 break;
         }
-        processor.prepareToPlay(processor.getSampleRate(), processor.getBlockSize());
+        
+        if(newFFTSize != lastFFTSize)
+        {
+            audioProcessor.fftSizeChanged(newFFTSize);
+//            processor.prepareToPlay(processor.getSampleRate(), processor.getBlockSize());
+        }
+            
+            
     };
     
     
@@ -146,7 +155,8 @@ SpecGrainAudioProcessorEditor::~SpecGrainAudioProcessorEditor()
 void SpecGrainAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+//    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(juce::Colours::royalblue);
 }
 
 void SpecGrainAudioProcessorEditor::resized()

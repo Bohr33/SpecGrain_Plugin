@@ -11,16 +11,21 @@
 #include <stdio.h>
 #include <vector>
 #include "Fsig.h"
+#include <algorithm>
+#include <cmath>
 
 class PitchShift
 {
 public:
     PitchShift(){};
-    void prepare(size_t nBins);
-    void process(float shiftAmt, fsig& fsigIn, fsig& fsigOut);
+    void prepare(int fftSize);
+    void process(fsig& frame, float shiftAmt);
+    
     
 private:
+    int fftSize;
     size_t numBins;
+    fsig tempFrame;
 };
 
 class SpectralBlur
@@ -28,8 +33,8 @@ class SpectralBlur
 public:
     SpectralBlur(){};
     
-    void prepare(size_t nBins);
-    void process(float blurAmt, fsig& fsigIn, fsig& fsigOut);
+    void prepare(int fftSize);
+    void process(fsig& frame, float blurAmt);
     
 private:
     size_t numBins;
@@ -43,8 +48,9 @@ class SpectralStretch
 public:
     SpectralStretch(){};
     
-    void prepare(size_t nBins);
-    void process(float stretchTime, float stretchDensity, fsig& input, fsig& output);
+    void prepare(int fftSize);
+    void process(fsig& frame, float stretchTime, float stretchDensity);
+    
     void interpFsig(float index, std::vector<fsig>& buffer, fsig& output);
     
     inline float wrapFloatIndex(float index, float max) {
@@ -69,13 +75,15 @@ class SpectralDelay
 public:
     SpectralDelay(){};
     
-    void prepare(size_t nBins, double sampleRate, size_t hSize);
-    void process(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut);
+    void prepare(int fftSize, double sampleRate, int overlapAmt = 4);
+    void process(fsig& frame, float delayTime, float delayAmt, float feedback, bool freqToggle);
     
 private:
     size_t numBins;
     size_t hopSize;
     double sr;
+
+    int overlap;
     
     std::vector<fsig> delayBuffer;
     int writeIndex = 0;
@@ -89,8 +97,8 @@ class SpectralGate
 public:
     SpectralGate(){};
     
-    void prepare(size_t nBins);
-    void process(float gateAmount, fsig& input);
+    void prepare(int fftSize);
+    void process(fsig& input, float gateAmt);
     
 private:
     size_t numBins;

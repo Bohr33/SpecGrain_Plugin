@@ -8,67 +8,62 @@
 #include "SpectralProcessors.hpp"
 
 
-void PitchShift::prepare(size_t nBins)
+void PitchShift::prepare(int fftSize)
 {
-    numBins = nBins;
-    DBG("Prepared Pitch Shift");
+    fftSize = fftSize;
+    numBins = fftSize / 2 + 1;
+    
+    tempFrame.resize(numBins);
 }
 
-void PitchShift::process(float shiftAmt, fsig& fsigIn, fsig& fsigOut)
+void PitchShift::process(fsig &frame, float shiftAmt)
 {
-    //Clear Output to be Safe
-    fsigOut.clear();
+    tempFrame.clear();
+    tempFrame = frame;
+    frame.clear();
     
     //For each bin, increase bin number, multiply frequency by shiftamount
     for(int bin = 0; bin < numBins; bin++)
     {
-        float newBin = juce::roundToInt(shiftAmt * bin);
+        float newBin = static_cast<int>(std::round(shiftAmt * bin));
         int lowBin = static_cast<int>(newBin);
         int highBin = lowBin + 1;
         float frac = newBin - lowBin;
         
         if(lowBin < numBins)
         {
-            fsigOut.amplitudes[newBin] += fsigIn.amplitudes[bin] * (1 - frac);
-            fsigOut.frequencies[newBin] = shiftAmt * fsigIn.frequencies[bin];
+            frame.amplitudes[newBin] += tempFrame.amplitudes[bin] * (1 - frac);
+            frame.frequencies[newBin] = shiftAmt * tempFrame.frequencies[bin];
         }
             
         if(highBin < numBins)
         {
-            fsigOut.amplitudes[newBin] += fsigIn.amplitudes[bin] * frac;
-            fsigOut.frequencies[newBin] = shiftAmt * fsigIn.frequencies[bin];
+            frame.amplitudes[newBin] += tempFrame.amplitudes[bin] * frac;
+            frame.frequencies[newBin] = shiftAmt * tempFrame.frequencies[bin];
         }
-
     }
-    
-    
 }
 
-void SpectralBlur::prepare(size_t nBins)
+void SpectralBlur::prepare(int fftSize)
 {
-    numBins = nBins;
+    numBins = fftSize / 2 + 1;
     blurWriteIndex = 0;
     
     blurBuffer.resize(maxBlurFrames);
     for(auto& f : blurBuffer)
         f.resize(numBins);
-    
-    DBG("Prepared Blur");
 }
 
-void SpectralBlur::process(float blurAmt, fsig& fsigIn, fsig& fsigOut)
+
+void SpectralBlur::process(fsig &frame, float blurAmt)
 {
     //copy currenty fsig into buffer
-    blurBuffer[blurWriteIndex] = fsigIn;
+    blurBuffer[blurWriteIndex] = frame;
     
-    int blurFrames = juce::roundToInt(blurAmt * maxBlurFrames);
-    
+    int blurFrames = static_cast<int>(std::round(blurAmt * maxBlurFrames));
     
     if(blurFrames == 0)
-    {
-        fsigOut = fsigIn;
         return;
-    }
     
     for(auto bin = 0; bin < numBins; bin++)
     {
@@ -81,16 +76,15 @@ void SpectralBlur::process(float blurAmt, fsig& fsigIn, fsig& fsigOut)
             amp += blurBuffer[index].amplitudes[bin];
             freq += blurBuffer[index].frequencies[bin];
         }
-        fsigOut.amplitudes[bin] = amp / blurFrames;
-        fsigOut.frequencies[bin] = freq / blurFrames;
+        frame.amplitudes[bin] = amp / blurFrames;
+        frame.frequencies[bin] = freq / blurFrames;
     }
     blurWriteIndex = (blurWriteIndex + 1) % maxBlurFrames;
 }
 
-
-void SpectralStretch::prepare(size_t nBins)
+void SpectralStretch::prepare(int fftSize)
 {
-    numBins = nBins;
+    numBins = fftSize / 2 + 1;
     writeIndex = 0;
     
     fBuffer.resize(maxFrames);
@@ -98,20 +92,20 @@ void SpectralStretch::prepare(size_t nBins)
         f.resize(numBins);
     
     processBuffer.resize(numBins);
-    DBG("Prepared Stretch");
 }
 
-void SpectralStretch::process(float stretchTime, float stretchDensity, fsig& input, fsig& output)
+
+
+void SpectralStretch::process(fsig &frame, float stretchTime, float stretchDensity)
 {
     //Add input to buffer
-    fBuffer[writeIndex] = input;
+    fBuffer[writeIndex] = frame;
     
     //If stretch Amount is 0, no effect
     if(stretchTime <= 0)
-    {
-        output = input;
         return;
-    }
+    
+    processBuffer.clear();
     
     //ensure stretch Amt is less than 1
     stretchTime = stretchTime < 1 ? stretchTime : 0.99;
@@ -133,8 +127,8 @@ void SpectralStretch::process(float stretchTime, float stretchDensity, fsig& inp
         interpFsig(index, fBuffer, processBuffer);
         for(int bin = 0; bin < numBins; bin++)
         {
-            output.frequencies[bin] += processBuffer.frequencies[bin] / numIterations;
-            output.amplitudes[bin] += processBuffer.amplitudes[bin] / numIterations;
+            frame.frequencies[bin] += processBuffer.frequencies[bin] / numIterations;
+            frame.amplitudes[bin] += processBuffer.amplitudes[bin] / numIterations;
         }
         
         index -= indexDelta;
@@ -162,26 +156,26 @@ void SpectralStretch::interpFsig(float index, std::vector<fsig>& buffer, fsig& o
 }
 
 
-void SpectralDelay::prepare(size_t nBins, double sampleRate, size_t hSize)
+void SpectralDelay::prepare(int fftSize, double sampleRate, int overlapAmt)
 {
     sr = sampleRate;
-    numBins = nBins;
-    hopSize = hSize;
-    maxDelayFrames = sr * maxDelaySeconds / hSize;
+    numBins = fftSize / 2 + 1;
+    hopSize = fftSize / overlapAmt;
+    maxDelayFrames = sr * maxDelaySeconds / hopSize;
 
     writeIndex = 0;
     
     delayBuffer.resize(maxDelayFrames);
     for(auto& f : delayBuffer)
         f.resize(numBins);
-    
-    DBG("Prepared Delay");
 }
 
-void SpectralDelay::process(float delayTime, float delayAmt, float feedback, bool freqToggle, fsig& fsigIn, fsig& fsigOut)
+
+void SpectralDelay::process(fsig &frame, float delayTime, float delayAmt, float feedback, bool freqToggle)
 {
     float freqTogVal = freqToggle ? 1.0 : 0.0;
-    float fback = juce::jlimit<float>(0.0, 0.99, feedback);
+    float fback = std::clamp(feedback, 0.0f, 0.99f);
+    
     
     float dtimeSamps = (delayTime/1000.0f)*sr;
     int dTimeFrames = static_cast<int>(dtimeSamps / hopSize);
@@ -190,12 +184,10 @@ void SpectralDelay::process(float delayTime, float delayAmt, float feedback, boo
     int clampedDelayFrames = std::min(dTimeFrames, maxSafeDelay);
     int delayReadIndex = (writeIndex - clampedDelayFrames + maxDelayFrames) % maxDelayFrames;
 
-    fsigOut = fsigIn; // assumes this is a deep copy
-
     for (int bin = 0; bin < numBins; ++bin)
     {
-        float ampIn = fsigIn.amplitudes[bin];
-        float freqIn = fsigIn.frequencies[bin];
+        float ampIn = frame.amplitudes[bin];
+        float freqIn = frame.frequencies[bin];
 
         float delayAmp = delayBuffer[delayReadIndex].amplitudes[bin];
         float delayFreq = delayBuffer[delayReadIndex].frequencies[bin];
@@ -203,30 +195,27 @@ void SpectralDelay::process(float delayTime, float delayAmt, float feedback, boo
         if (!std::isfinite(delayAmp)) delayAmp = 0.0f;
         if (!std::isfinite(delayFreq)) delayFreq = 0.0f;
 
-        fsigOut.amplitudes[bin] += delayAmp * delayAmt;
-        fsigOut.frequencies[bin] += delayFreq * delayAmt * freqTogVal;
+        frame.amplitudes[bin] += delayAmp * delayAmt;
+        frame.frequencies[bin] += delayFreq * delayAmt * freqTogVal;
 
         delayBuffer[writeIndex].amplitudes[bin] = ampIn + delayAmp * fback;
         delayBuffer[writeIndex].frequencies[bin] = freqIn + delayFreq * fback;
     }
 
     writeIndex = (writeIndex + 1) % maxDelayFrames;
-
 }
 
 
-void SpectralGate::prepare(size_t nBins)
+void SpectralGate::prepare(int fftSize)
 {
-    numBins = nBins;
+    numBins = fftSize / 2 + 1;
 }
 
-void SpectralGate::process(float gateAmount, fsig& input)
+void SpectralGate::process(fsig& input, float gateAmt)
 {
     for(auto i = 0; i < numBins; i++)
     {
-        if(input.amplitudes[i] <= gateAmount)
-        {
+        if(input.amplitudes[i] <= gateAmt)
             input.amplitudes[i] = 0.0;
-        }
     }
 }

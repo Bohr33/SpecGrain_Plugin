@@ -9,7 +9,7 @@
 #define Fsig_h
 
 #include <vector>
-#include <JuceHeader.h>
+#include <algorithm>
 
 struct fsig{
     std::vector<float> amplitudes;
@@ -23,8 +23,8 @@ struct fsig{
     
     void clear()
     {
-        juce::FloatVectorOperations::clear(amplitudes.data(), amplitudes.size());
-        juce::FloatVectorOperations::clear(frequencies.data(), frequencies.size());
+        std::fill(amplitudes.begin(), amplitudes.end(), 0.0f);
+        std::fill(frequencies.begin(), frequencies.end(), 0.0f);
     }
 };
 
