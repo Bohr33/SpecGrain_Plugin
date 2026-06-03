@@ -10,21 +10,16 @@
 
 #include "PhaseVocoderEngine.h"
 
-
-
-//New Better Class
-
-void PhaseVocoderEngine::prepare(size_t bufferSize, double sampleRate, int fftSize, int numChannels)
+void PhaseVocoderEngine::prepare(size_t newBufferSize, size_t newFftSize, int numChannels)
 {
     for(int channel = 0; channel < numChannels; channel++)
     {
         phaseVocoders.resize(numChannels);
-    
     }
     
     for(auto& pv : phaseVocoders)
     {
-        pv.prepare(bufferSize, sampleRate, fftSize);
+        pv.prepare(newBufferSize, newFftSize);
     }
 }
 

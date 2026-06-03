@@ -17,7 +17,7 @@ class PhaseVocoderEngine
 {
 public:
     
-    void prepare(size_t bufferSize, double sampleRate, int fftSize, int numChannels);
+    void prepare(size_t newBufferSize, size_t newFftSize, int numChannels);
     
     void pushSamples(int channel, std::span<const float> buffer);
     void pullSamples(int channel, std::span<float> buffer);

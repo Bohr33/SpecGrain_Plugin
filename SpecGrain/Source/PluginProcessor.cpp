@@ -113,7 +113,7 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     
     fftSize = pendingFFTSize.load();
     
-    pvEngine->prepare(samplesPerBlock, sampleRate, fftSize, numChannels);
+    pvEngine->prepare(samplesPerBlock, fftSize, numChannels);
     
     pShifts.resize(numChannels);
     specBlurs.resize(numChannels);

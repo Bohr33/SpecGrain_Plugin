@@ -14,75 +14,31 @@
 PhaseVocoder::PhaseVocoder()
 {}
 
-void PhaseVocoder::prepare(size_t buffSize, double sampleRate, unsigned int sizeFft)
+void PhaseVocoder::prepare(size_t newBlockSize, size_t newFftSize)
 {
-    fftSize = sizeFft;
-    samplingRate = sampleRate;
-    bufferSize = buffSize;
-    hopSize = fftSize / overlapAmount;
-    
-    hopsPerBlock = buffSize / hopSize;
+    blockSize = newBlockSize;
+    fftSize = newFftSize;
+    hopSize = static_cast<int>(fftSize / overlapAmount);
+    hopsPerBlock = blockSize / hopSize;
     numBins = fftSize / 2 + 1;
     
     
     //Reset indecies
     sampsAccumulated = 0;
     overlapReadPos = 0;
-    
-    //Overlap write must start 'fftSize' ahead of read
-    overlapWritePos = (int) fftSize;
     inputBufferHead = 0;
+    overlapWritePos = (int) fftSize; //Overlap write must start 'fftSize' ahead of read
+    bufferCounter = 0;
+    
     
     auto fftOrder = std::log2(fftSize);
     fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
     window = std::make_unique<Window>(fftSize);
     
-    gainCompensation = 0.0f;
-    for(int i = 0; i < fftSize; i++)
-    {
-        auto val = window->getValue(i);
-        gainCompensation += val*val;
-    }
-    gainCompensation /= hopSize;
-    gainCompensation = 1.0f / gainCompensation;
+    gainCompensation = calculateGainCompensation();
     
-
-    //Resize all vectors
-    inputBuffer.resize(fftSize);
-    fftBuffer.resize(fftSize*2);
-    
-    lastInputPhase.resize(fftSize/2);
-    lastOutputPhase.resize(fftSize/2);
-    
-    fsigBuff1.resize(numBins);
-    
-    
-    frameBuffer.resize(hopsPerBlock);
-    for(auto& frame : frameBuffer)
-        frame.resize(numBins);
-    
-    bufferCounter = 0;
-    
-    overlapBuffer.resize(fftSize * 2);
-    bufferFull = false;
-    
-    
-    
-    DBG("fftSize: " << fftSize);
-    DBG("hopSize: " << hopSize);
-    DBG("hopsPerBlock: " << hopsPerBlock);
-    DBG("bufferSize: " << bufferSize);
-    
-    //Clear all vectors, just zeros the data, doesn't do vector.clear()
-    juce::FloatVectorOperations::clear(inputBuffer.data(), inputBuffer.size());
-    juce::FloatVectorOperations::clear(fftBuffer.data(), fftBuffer.size());
-    juce::FloatVectorOperations::clear(lastInputPhase.data(), lastInputPhase.size());
-    juce::FloatVectorOperations::clear(lastOutputPhase.data(), lastOutputPhase.size());
-    fsigBuff1.clear();
-    juce::FloatVectorOperations::clear(overlapBuffer.data(), overlapBuffer.size());
-    
-    for(fsig frame : frameBuffer)
-        frame.clear();
+    resizeAllVectors();
+    clearAllVectors();
 
 }
 
@@ -90,10 +46,9 @@ void PhaseVocoder::pushSamples(std::span<const float> buffer)
 {
     
     //Perform check to make sure buffer size is equal to hops per block?
-    if (buffer.size() < bufferSize) {
+    if (buffer.size() < blockSize) {
         return;
     }
-    
     
     for(auto hop = 0; hop < hopsPerBlock; ++hop)
     {
@@ -102,13 +57,15 @@ void PhaseVocoder::pushSamples(std::span<const float> buffer)
         juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.data() + hop * hopSize, hopSize);
         
         
-        sampsAccumulated += hopSize;
-        if(sampsAccumulated >= fftSize)
-            bufferFull = true;
         
-        //Once buffer is full, begin actual processing loop
-        if(!bufferFull)
+        
+        
+        sampsAccumulated += hopSize;
+        //Once buffer is full, continue to FFT
+        if(sampsAccumulated < fftSize)
             return;
+        
+        
         
         //Clear used buffers for safety
         juce::FloatVectorOperations::fill(fftBuffer.data(), 0.0, fftBuffer.size());
@@ -154,7 +111,7 @@ void PhaseVocoder::pullSamples(std::span<float> outputBuffer)
     }
     
     //Increment Read Positions
-    overlapReadPos += bufferSize;
+    overlapReadPos += blockSize;
     overlapReadPos %= overlapBuffer.size();
 
     
@@ -265,4 +222,49 @@ float PhaseVocoder::wrapPhase(float phaseIn)
 std::vector<fsig>& PhaseVocoder::getFsigBuffer()
 {
     return frameBuffer;
+}
+
+void PhaseVocoder::clearAllVectors()
+{
+    //Clear all vectors, just zeros the data, doesn't do vector.clear()
+    std::ranges::fill(inputBuffer, 0.0f);
+    std::ranges::fill(fftBuffer, 0.0f);
+    std::ranges::fill(lastInputPhase, 0.0f);
+    std::ranges::fill(lastOutputPhase, 0.0f);
+    std::ranges::fill(overlapBuffer, 0.0f);
+    fsigBuff1.clear();
+    
+    for(fsig frame : frameBuffer)
+        frame.clear();
+}
+
+void PhaseVocoder::resizeAllVectors()
+{
+    //Must Be called after variables are calculated in prepare since
+    //resizing is dependant on those variables
+    
+    inputBuffer.assign(fftSize, 0.0f);
+    fftBuffer.assign(fftSize*2, 0.0f);
+    lastInputPhase.assign(fftSize/2, 0.0f);
+    lastOutputPhase.assign(fftSize/2, 0.0f);
+    fsigBuff1.resize(numBins);
+    frameBuffer.resize(hopsPerBlock);
+    
+    for(auto& frame : frameBuffer)
+        frame.resize(numBins);
+    
+    overlapBuffer.resize(fftSize * 2);
+}
+
+float PhaseVocoder::calculateGainCompensation()
+{
+    float gain = 0.0f;
+    for(int i = 0; i < fftSize; i++)
+    {
+        auto val = window->getValue(i);
+        gain += val*val;
+    }
+    gain /= hopSize;
+    
+    return 1.0f / gain;
 }

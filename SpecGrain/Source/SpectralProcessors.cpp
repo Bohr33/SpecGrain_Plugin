@@ -51,7 +51,10 @@ void SpectralBlur::prepare(int fftSize)
     
     blurBuffer.resize(maxBlurFrames);
     for(auto& f : blurBuffer)
+    {
         f.resize(numBins);
+        f.clear();
+    }
 }
 
 
@@ -89,9 +92,12 @@ void SpectralStretch::prepare(int fftSize)
     
     fBuffer.resize(maxFrames);
     for(auto& f : fBuffer)
+    {
         f.resize(numBins);
-    
+        f.clear();
+    }
     processBuffer.resize(numBins);
+    processBuffer.clear();
 }
 
 
@@ -167,7 +173,10 @@ void SpectralDelay::prepare(int fftSize, double sampleRate, int overlapAmt)
     
     delayBuffer.resize(maxDelayFrames);
     for(auto& f : delayBuffer)
+    {
         f.resize(numBins);
+        f.clear();
+    }
 }
 
 
