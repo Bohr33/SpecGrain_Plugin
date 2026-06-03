@@ -110,7 +110,6 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     int numChannels = getMainBusNumInputChannels();
     
-    
     fftSize = pendingFFTSize.load();
     
     pvEngine->prepare(samplesPerBlock, fftSize, numChannels);
@@ -129,7 +128,6 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
         specStretchs[channel].prepare(fftSize);
         specGates[channel].prepare(fftSize);
     }
-    
     resizePending.store(false);
 }
 

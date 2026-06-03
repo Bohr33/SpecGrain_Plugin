@@ -54,12 +54,9 @@ void PhaseVocoder::pushSamples(std::span<const float> buffer)
     {
         
         //Copy hopSize buffer samples to larger buffer for FFT processing
-        juce::FloatVectorOperations::copy(inputBuffer.data() + inputBufferHead, buffer.data() + hop * hopSize, hopSize);
+        std::ranges::copy(std::span(buffer.data() + hop * hopSize, hopSize), inputBuffer.data() + inputBufferHead);
         
-        
-        
-        
-        
+    
         sampsAccumulated += hopSize;
         //Once buffer is full, continue to FFT
         if(sampsAccumulated < fftSize)
@@ -68,7 +65,7 @@ void PhaseVocoder::pushSamples(std::span<const float> buffer)
         
         
         //Clear used buffers for safety
-        juce::FloatVectorOperations::fill(fftBuffer.data(), 0.0, fftBuffer.size());
+        std::fill(fftBuffer.begin(), fftBuffer.end(), 0.0f);
         fsigBuff1.clear();
         
         //Apply window and pass to larger array
@@ -211,7 +208,7 @@ void PhaseVocoder::pvSynthesize(fsig& fsig, std::vector<float>& fftOutput)
 
 float PhaseVocoder::wrapPhase(float phaseIn)
 {
-    float pi = juce::MathConstants<float>::pi;
+    float pi = std::numbers::pi;
     if (phaseIn >= 0)
         return fmodf(phaseIn + pi, 2.0 * pi) - pi;
     else

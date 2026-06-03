@@ -65,6 +65,8 @@ public:
 
 private:
     
+    
+    
     std::unique_ptr<PhaseVocoderEngine> pvEngine;
     
     juce::AudioProcessorValueTreeState parameters;
