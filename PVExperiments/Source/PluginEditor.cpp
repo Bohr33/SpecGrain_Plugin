@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
+PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperimentsAudioProcessor& p, juce::AudioProcessorValueTreeState& vts)
     : AudioProcessorEditor (&p), audioProcessor (p), valueTreeState(vts)
 {
     // Make sure that before the constructor has finished, you've set the
@@ -115,7 +115,6 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
         if(newFFTSize != lastFFTSize)
         {
             audioProcessor.fftSizeChanged(newFFTSize);
-//            processor.prepareToPlay(processor.getSampleRate(), processor.getBlockSize());
         }
             
             
@@ -147,19 +146,18 @@ SpecGrainAudioProcessorEditor::SpecGrainAudioProcessorEditor (SpecGrainAudioProc
     addAndMakeVisible(&fftSizeLabel);
 }
 
-SpecGrainAudioProcessorEditor::~SpecGrainAudioProcessorEditor()
+PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
 {
 }
 
 //==============================================================================
-void SpecGrainAudioProcessorEditor::paint (juce::Graphics& g)
+void PVExperimentsAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-//    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-    g.fillAll(juce::Colours::grey);
+    g.fillAll(juce::Colour::fromRGB(13, 17, 22));
 }
 
-void SpecGrainAudioProcessorEditor::resized()
+void PVExperimentsAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..

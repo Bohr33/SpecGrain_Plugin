@@ -1,46 +1,57 @@
-# SpecGrain Plugin
-SpecGrain is VST/AU plugin built with the JUCE framework that explores various spectral processes. 
-There are four main spectral processes employed in this plugin: pitch shifting, spectral delay, spectral blur, and a somewhat experimental process I call spectral stretch. As well as this, there is a simple gating function that helps eliminate some of the spectral noise that occurs from combining certain effects.
+# PVExperiments
 
-###Controls
-There are 8 dials to control the main parameters. 
+A VST/AU plugin built with the JUCE framework. Originally intended as a phase vocoder implementation, the project grew into a small spectral processing framework incorporating several experimental effects.
 
- - **Pitch Shift:** controls the amount of pitch shifting as a raw floating point value. Range (0.0 - 3.0)
- - **Blur Amount:** Determines over how long a period spectal frames will be averaged to blur.
- - **Spectral Time:** Controls the length of time spectral frames will be held in a buffer.
- - **Spectral Density:** Controls how many frames will be read from the Stretch buffer in a single frame. 
- - **Gate Amount:** Determines the cutoff point for values to be zeroed. Spectral Amplitude values below this point will be set to 0.0.
- - **Delay Time:** Sets the delay time in milliseconds.
- - **Delay Amount:** Controls how much of the delay will be added to the input signal.
- - **Feedback:** Controls the delay feedback. A value of 1 is limited to 0.99.
+## Effects
 
-As well as this, there are two extra controls
+Audio is processed through five stages in series:
 
-- **FFT Size:** This is a drop down menu that allows for changing the FFT size to 1 of 3 values. This was mostly included for testing purposes, however it may be useful for the user to change this to decrease latency.
+**Pitch Shift → Spectral Stretch → Gate → Spectral Delay → Spectral Blur**
 
-- **Frequency Delay Toggle:** This toggles the ability to delay the Fsig frequnecy values as well as the amplitude values. I thought both versions were interesting so I included a toggle.
+| Effect | Description |
+|---|---|
+| Pitch Shift | Standard phase vocoder pitch shifting |
+| Spectral Stretch | Granular-style effect that holds a buffer of spectral frames and reads through them at a variable density, producing smearing and textural artifacts |
+| Gate | Zeros any spectral bin below an amplitude threshold, used to suppress noise introduced by the other effects |
+| Spectral Delay | Delays spectral frames in time, with an optional mode that delays frequency values alongside amplitude values |
+| Spectral Blur | Averages spectral frames over a set window to blur the frequency content |
 
+**Note:** If you want to change the effect processing order, simply rearrange the effect processing functions in the AudioProcessor `processBlock()` function.
 
-### Processing Flow
-The flow of the process is as follows...
+## Controls
 
-Pitch Shift -> Stretch -> Gate -> Delay -> Blur
+### Main parameters
+
+| Parameter | Description | Range |
+|---|---|---|
+| Pitch Shift | Pitch shift multiplier | 0.0 – 3.0 |
+| Blur Amount | Window length (Max 300 frames) over which spectral frames are averaged | 0.0 - 1.0 |
+| Spectral Time | Duration for which frames are held in the stretch buffer | 0.0 - 1.0 |
+| Spectral Density | Density of frames played back during the **Spectral Time**| 0.0 - 1.0 |
+| Gate Amount | Amplitude threshold below which bin values are zeroed | 0.0 - 1.0 |
+| Delay Time | Spectral delay time in milliseconds | 1.0 - 2,000 ms |
+| Delay Amount | Gain mix of the spectral delay | 0.0 - 1.0 |
+| Feedback | Delay feedback amount (clamped to 0.99) | 0.0 - 0.99 |
+
+### Additional controls
+
+- **FFT Size** — dropdown to select between three FFT sizes. Primarily included for testing, but smaller sizes can reduce latency. Also affects the timing of a few of the spectralProcessors that aren't knowledable of the sample rate.
+- **Frequency Delay Toggle** — when enabled, the delay is applied to both frequency and amplitude values rather than amplitude alone.
 
 ## Implementation
 
-### PhaseVocoder
-The plugin implements a phase vocoder via an STFT transform in order to create a custom structure called an Fsig, which holds the amplitude and frequency values in vectors of FFT Size/2 + 1. These operations are contained within the PhaseVocoder.cpp and header files. Many buffers were needed to manage all of the data properly and these are contained as std::vectors in the phase vocoder file. They are resized and managed within the prepare functions, which allow them to be changed when a new buffer size, fft size, or sample rate are changed. The process function receives the audio buffer from the audio processor process function, and most of the operations happen in there.
+### Phase vocoder
 
-### Spectral Processes
-The spectral processes are contained in the SpectralProcessors.cpp and header file. These are relatively simple as far as classes, and mostly only implement their own prepare function, and processing function. The phase vocoder function contains instances of each of these processing objects and calls their prepare and process functions in the respective locations in the phase vocoder class. 
+The phase vocoder performs an STFT and produces a custom `Fsig` structure holding per-bin amplitude and frequency values as vectors of length `FFT size / 2 + 1`. Internal buffers are managed as `std::vector`s and resized in `prepare()`, which handles changes to buffer size, FFT size, and sample rate. The phase vocoder owns instances of each spectral processor and calls their `prepare()` and `process()` functions at the appropriate points.
 
-The spectral stretch processor came from wanting to implement a time stretching algorithm. Originally, I had created a time stretching algorithm. This worked by holding a circular buffer of input frames, then read them back at a different rate. However, this posed issues for real-time processing since the read and write pointers were at different rates. So instead, I tried implementing a somewhat similar idea by holding a buffer of input samples (determined by stretch time), then at each new frame, read through each of the held samples via new read pointer that read slower than the write pointer. This became very computationally expensive and only made a filtering mess, so instead, I changed the stretch amount parameter to a stretch time parameter which jumps through the saved buffer and reads frames based on a density factor, creating more of a granular process.
+### Spectral processors
 
+Each spectral processor is a relatively lightweight class implementing its own `prepare()` and `process()` functions. The spectral stretch processor originated as a time-stretching algorithm using a circular buffer of input frames read back at a different rate. This proved problematic for real-time use, so the design was changed: a buffer of frames is held for a duration set by the stretch time parameter, and frames are read from it at a density determined by the density parameter — producing a granular-style smearing effect rather than true time stretching.
 
-### GUI Parameters
-The GUI objects are added in the standard JUCE way within the Plugin Editor class. The parameters are declared within a Juce::AudioValueTreeState located in the processing class, and this is passed to the Phase Vocoder for the values to be loaded. The parameters are stored within atomics for thread safety, and on each frame process, they are loaded and passed to their respective spectral processes.
+### Parameters and threading
 
+Parameters are declared in a `juce::AudioProcessorValueTreeState` in the processor class and passed to the phase vocoder. Values are stored as atomics and loaded at the top of each frame process to ensure thread safety.
 
-###Notes
-This plugin was created mostly as an exercise to implement spectral processing via the phase vocoder. Once this was working, I wanted to implement some spectral processing algorithms to make use of it. Although it works, there are some serious optimizations that need to be made for future use. CPU usage gets near the maximum on my computer for stereo processing and buffer size of 512 when effects are maxed. This is mostly due to the spectral stretch and blur effects which need to read through many Fsig buffers in a single frame. As well as this, the Phase Vocoder class is very clunky and should be re-done in a more readable way, probably by extracting the STFT and Phase Vocoder functions and creating distinct classes just for those functions. 
+## Performance notes
 
+CPU usage is significant, particularly for stereo processing at a buffer size of 512 with the stretch and blur effects active. Both effects require reading through large numbers of `Fsig` frames per output frame and are the primary bottleneck.

@@ -14,11 +14,11 @@
 //==============================================================================
 /**
 */
-class SpecGrainAudioProcessorEditor  : public juce::AudioProcessorEditor
+class PVExperimentsAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    SpecGrainAudioProcessorEditor (SpecGrainAudioProcessor&, juce::AudioProcessorValueTreeState& vts);
-    ~SpecGrainAudioProcessorEditor() override;
+    PVExperimentsAudioProcessorEditor (PVExperimentsAudioProcessor&, juce::AudioProcessorValueTreeState& vts);
+    ~PVExperimentsAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -27,7 +27,7 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    SpecGrainAudioProcessor& audioProcessor;
+    PVExperimentsAudioProcessor& audioProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
     
     juce::Slider pitchSlider;
@@ -69,5 +69,5 @@ private:
     juce::Label fftSizeLabel;
     
     
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PVExperimentsAudioProcessorEditor)
 };

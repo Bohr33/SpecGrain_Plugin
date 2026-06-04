@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-SpecGrainAudioProcessor::SpecGrainAudioProcessor()
+PVExperimentsAudioProcessor::PVExperimentsAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -37,19 +37,19 @@ SpecGrainAudioProcessor::SpecGrainAudioProcessor()
     gateAmtParam = parameters.getRawParameterValue("GATE_AMOUNT");
 }
 
-SpecGrainAudioProcessor::~SpecGrainAudioProcessor()
+PVExperimentsAudioProcessor::~PVExperimentsAudioProcessor()
 {
 }
 
 //==============================================================================
 
 
-const juce::String SpecGrainAudioProcessor::getName() const
+const juce::String PVExperimentsAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool SpecGrainAudioProcessor::acceptsMidi() const
+bool PVExperimentsAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -58,7 +58,7 @@ bool SpecGrainAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool SpecGrainAudioProcessor::producesMidi() const
+bool PVExperimentsAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -67,7 +67,7 @@ bool SpecGrainAudioProcessor::producesMidi() const
    #endif
 }
 
-bool SpecGrainAudioProcessor::isMidiEffect() const
+bool PVExperimentsAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -76,37 +76,37 @@ bool SpecGrainAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double SpecGrainAudioProcessor::getTailLengthSeconds() const
+double PVExperimentsAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int SpecGrainAudioProcessor::getNumPrograms()
+int PVExperimentsAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int SpecGrainAudioProcessor::getCurrentProgram()
+int PVExperimentsAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void SpecGrainAudioProcessor::setCurrentProgram (int index)
+void PVExperimentsAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String SpecGrainAudioProcessor::getProgramName (int index)
+const juce::String PVExperimentsAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void SpecGrainAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void PVExperimentsAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void PVExperimentsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     int numChannels = getMainBusNumInputChannels();
     
@@ -131,14 +131,14 @@ void SpecGrainAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     resizePending.store(false);
 }
 
-void SpecGrainAudioProcessor::releaseResources()
+void PVExperimentsAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool SpecGrainAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool PVExperimentsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -164,7 +164,7 @@ bool SpecGrainAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 }
 #endif
 
-void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void PVExperimentsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     int numChans = getMainBusNumInputChannels();
     
@@ -200,10 +200,10 @@ void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         for(auto& frame : frames)
         {
             pShifts[ch].process(frame, pShiftAmt);
-            specBlurs[ch].process(frame, blurAmt);
             specStretchs[ch].process(frame, stretchTime, stretchDensity);
-            specDelays[ch].process(frame, delayTime, delayAmt, delayFeedback, delayFreqToggle);
             specGates[ch].process(frame, gateAmt);
+            specDelays[ch].process(frame, delayTime, delayAmt, delayFeedback, delayFreqToggle);
+            specBlurs[ch].process(frame, blurAmt);
         }
     }
     
@@ -216,31 +216,31 @@ void SpecGrainAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 }
 
 //==============================================================================
-bool SpecGrainAudioProcessor::hasEditor() const
+bool PVExperimentsAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* SpecGrainAudioProcessor::createEditor()
+juce::AudioProcessorEditor* PVExperimentsAudioProcessor::createEditor()
 {
-    return new SpecGrainAudioProcessorEditor (*this, parameters);
+    return new PVExperimentsAudioProcessorEditor (*this, parameters);
 }
 
 //==============================================================================
-void SpecGrainAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void PVExperimentsAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void SpecGrainAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void PVExperimentsAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
 
-juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::createParameterLayout()
+juce::AudioProcessorValueTreeState::ParameterLayout PVExperimentsAudioProcessor::createParameterLayout()
 {
     int versionHint = 1;
     
@@ -270,7 +270,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SpecGrainAudioProcessor::cre
 }
 
 
-void SpecGrainAudioProcessor::fftSizeChanged(int newFFTsize)
+void PVExperimentsAudioProcessor::fftSizeChanged(int newFFTsize)
 {
     pendingFFTSize.store(newFFTsize);
     resizePending.store(true);
@@ -280,5 +280,5 @@ void SpecGrainAudioProcessor::fftSizeChanged(int newFFTsize)
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new SpecGrainAudioProcessor();
+    return new PVExperimentsAudioProcessor();
 }

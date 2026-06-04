@@ -16,12 +16,12 @@
 //==============================================================================
 /**
 */
-class SpecGrainAudioProcessor  : public juce::AudioProcessor
+class PVExperimentsAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    SpecGrainAudioProcessor();
-    ~SpecGrainAudioProcessor() override;
+    PVExperimentsAudioProcessor();
+    ~PVExperimentsAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -97,5 +97,5 @@ private:
     
     
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpecGrainAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PVExperimentsAudioProcessor)
 };

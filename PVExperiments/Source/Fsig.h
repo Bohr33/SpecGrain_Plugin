@@ -1,6 +1,6 @@
 //
 //  Fsig.h
-//  SpecGrain - Shared Code
+//  PVExperiments - Shared Code
 //
 //  Created by Benjamin Ward (Old Computer) on 6/25/25.
 //

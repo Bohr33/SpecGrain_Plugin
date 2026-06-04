@@ -1,6 +1,6 @@
 //
 //  SpectralProcessors.hpp
-//  SpecGrain
+//  PVExperiments
 //
 //  Created by Benjamin Ward (Old Computer) on 6/25/25.
 //
