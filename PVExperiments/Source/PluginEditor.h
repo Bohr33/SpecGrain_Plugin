@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "Graphics.h"
 
 //==============================================================================
 /**
@@ -67,6 +68,8 @@ private:
     
     juce::ComboBox fftSizeMenu;
     juce::Label fftSizeLabel;
+    
+    MyLookAndFeel myLookAndFeel;
     
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PVExperimentsAudioProcessorEditor)

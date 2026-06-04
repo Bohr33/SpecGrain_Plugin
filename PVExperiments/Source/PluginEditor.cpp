@@ -144,10 +144,13 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     
     addAndMakeVisible(&fftSizeMenu);
     addAndMakeVisible(&fftSizeLabel);
+    
+    setLookAndFeel(&myLookAndFeel);
 }
 
 PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
 {
+    setLookAndFeel(nullptr);
 }
 
 //==============================================================================
