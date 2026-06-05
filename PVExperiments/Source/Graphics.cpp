@@ -155,3 +155,44 @@ void BasicToggleComponent::attach(juce::AudioProcessorValueTreeState &apvts, con
     );
     
 }
+
+
+
+TitleWithUnderline::TitleWithUnderline()
+{
+    titleLabel.setJustificationType(juce::Justification::left);
+    addAndMakeVisible(titleLabel);
+}
+
+void TitleWithUnderline::setText(juce::String newTitle)
+{
+    titleLabel.setText(newTitle, juce::dontSendNotification);
+}
+
+void TitleWithUnderline::resized()
+{
+    titleLabel.setFont(juce::FontOptions(getHeight()* 0.5f));
+    
+    auto titleBounds = getLocalBounds().reduced(padding_sides, 0).removeFromTop(getHeight() - padding_bottom);;
+    
+    titleLabel.setBounds(titleBounds);
+}
+
+void TitleWithUnderline::paint(juce::Graphics& g)
+{
+    
+    auto bounds = getLocalBounds().toFloat();
+    
+    bounds.removeFromBottom(padding_bottom);
+    
+    g.setColour(juce::Colours::white);
+    
+    
+    auto sidePadding = 8.0f;
+    auto bottomPadding = 5.0f;
+    
+    g.drawLine(bounds.getX() + sidePadding + padding_sides, bounds.getBottom() - bottomPadding, bounds.getRight() - (sidePadding + padding_sides), bounds.getBottom() - bottomPadding, 1.0f);
+}
+
+
+

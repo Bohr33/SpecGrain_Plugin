@@ -44,11 +44,10 @@ private:
 
     BasicToggleComponent delayFreqButton;
     
-//    juce::TextButton delayFreqButton;
-//    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayFreqButtonAttch;
-    
     juce::ComboBox fftSizeMenu;
     juce::Label fftSizeLabel;
+    
+    TitleWithUnderline Title;
     
     MyLookAndFeel myLookAndFeel;
     

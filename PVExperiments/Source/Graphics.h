@@ -82,3 +82,21 @@ private:
     
 };
 
+
+
+
+class TitleWithUnderline : public juce::Component
+{
+public:
+    
+    TitleWithUnderline();
+    juce::Label titleLabel;
+    
+    void resized() override;
+    void paint(juce::Graphics& g) override;
+    void setText(juce::String newTitle);
+    
+    int padding_bottom = 0.0f;
+    int padding_sides = 0.0f;
+};
+
