@@ -17,12 +17,14 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     // editor's size to whatever you need it to be.
     setSize (400, 400);
     
-    pitchSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "PITCH_SHIFT", pitchSlider));
-    pitchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    pitchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
     
-    pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
-    pitchSliderLabel.setJustificationType(juce::Justification::centred);
+    pitchSlider2.attach(valueTreeState, "PITCH_SHIFT");
+//    pitchSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "PITCH_SHIFT", pitchSlider));
+//    pitchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+//    pitchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    
+//    pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
+//    pitchSliderLabel.setJustificationType(juce::Justification::centred);
     
     blurSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "BLUR_AMOUNT", blurSlider));
     blurSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
@@ -121,6 +123,12 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     };
     
     
+    pitchSlider.setColour(juce::Slider::rotarySliderFillColourId, myLookAndFeel.creamColour);
+    
+    
+    pitchSlider2.setText("Pitch Shift");
+    addAndMakeVisible(&pitchSlider2);
+    
     addAndMakeVisible(&pitchSlider);
     addAndMakeVisible(&pitchSliderLabel);
     addAndMakeVisible(&blurSlider);
@@ -191,8 +199,14 @@ void PVExperimentsAudioProcessorEditor::resized()
     //Second Row
     int row2Y = row1Y - sliderHeight - labelHeight;
     
-    pitchSlider.setBounds(rowX, row2Y, sliderWidth, sliderHeight);
-    pitchSliderLabel.setBounds(rowX,  row2Y + sliderHeight, sliderWidth, labelHeight);
+    
+    
+    
+    
+    pitchSlider2.setBounds(rowX, row2Y, sliderWidth, sliderHeight+labelHeight);
+    
+//    pitchSlider.setBounds(rowX, row2Y, sliderWidth, sliderHeight);
+//    pitchSliderLabel.setBounds(rowX,  row2Y + sliderHeight, sliderWidth, labelHeight);
     
     blurSlider.setBounds(rowX + sliderWidth, row2Y, sliderWidth, sliderHeight);
     blurSliderLabel.setBounds(rowX + sliderWidth, row2Y + sliderHeight, sliderWidth, labelHeight);

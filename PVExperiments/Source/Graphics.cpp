@@ -12,7 +12,8 @@
 
 void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider &slider)
 {
-    auto bounds = juce::Rectangle<float>(x, y, width, height).withSizeKeepingCentre(width, width).reduced(20.0, 20.0);
+    auto size = juce::jmin(width, height);
+    auto bounds = juce::Rectangle<float>(x, y, width, height).withSizeKeepingCentre(size, size);
     auto centre = bounds.getCentre();
     auto radius = bounds.getWidth() / 2.0f;
 
@@ -39,3 +40,78 @@ void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width,
     g.drawLine({ lineStart, lineEnd },3.0f);
     
 }
+
+
+
+
+
+BasicDialComponent::BasicDialComponent()
+{
+    dial.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
+    dial.setTextBoxStyle(juce::Slider::NoTextBox, false, 60, 20);
+    
+    dial.addListener(this);
+    
+    nameLabel.setJustificationType(juce::Justification::centred);
+    
+    valueLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(nameLabel);
+    addAndMakeVisible(dial);
+    addAndMakeVisible(valueLabel);
+    
+    
+    
+//    pitchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+//    pitchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+//
+//    pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
+//    pitchSliderLabel.setJustificationType(juce::Justification::centred);
+    
+    
+}
+
+
+void BasicDialComponent::paint(juce::Graphics &g)
+{
+    g.setColour(accentColour1);
+    g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 4.0f, 1.0f);
+    
+}
+
+
+void BasicDialComponent::resized()
+{
+    auto bounds = getLocalBounds();
+    auto totalHeight = bounds.getHeight();
+    auto quarterHeight = totalHeight * 0.25f;
+    auto halfHeight = totalHeight * 0.5;
+    
+    auto titleBounds = bounds.removeFromTop(quarterHeight);
+    auto dialBounds = bounds.removeFromTop(halfHeight);
+    
+    
+    nameLabel.setBounds(titleBounds);
+    dial.setBounds(dialBounds.toNearestInt());
+    valueLabel.setBounds(bounds);
+}
+
+void BasicDialComponent::setText(juce::String newText)
+{
+    nameLabel.setText(newText, juce::dontSendNotification);
+}
+
+
+void BasicDialComponent::sliderValueChanged(juce::Slider* slider)
+{
+    valueLabel.setText(juce::String::formatted("%.2f", slider->getValue()), juce::dontSendNotification);
+}
+
+
+void BasicDialComponent::attach(juce::AudioProcessorValueTreeState &apvts, const juce::String& paramID)
+{
+    attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        apvts, paramID, dial
+    );
+}
+

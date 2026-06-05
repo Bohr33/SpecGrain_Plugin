@@ -31,6 +31,9 @@ private:
     PVExperimentsAudioProcessor& audioProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
     
+    
+    BasicDialComponent pitchSlider2;
+    
     juce::Slider pitchSlider;
     juce::Label  pitchSliderLabel;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchSliderAttch;
