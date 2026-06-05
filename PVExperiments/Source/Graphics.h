@@ -74,6 +74,8 @@ public:
     
     void setText(juce::String newButtonText);
     
+    void setButtonSizeAsFloat(float fractionOfAvailableSpace);
+    
     void resized() override;
     
     juce::TextButton button;
@@ -81,6 +83,8 @@ public:
     
 private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> attachment;
+    
+    float buttonSize = 0.5f;
     
 };
 

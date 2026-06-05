@@ -130,7 +130,7 @@ void BasicToggleComponent::resized()
     auto textBounds = bounds.removeFromTop(getHeight() * 0.25);
     
     textLabel.setBounds(textBounds);
-    button.setBounds(bounds);
+    button.setBounds(bounds.reduced(bounds.getWidth()/2.0f * buttonSize));
     
 }
 
@@ -145,7 +145,11 @@ void BasicToggleComponent::attach(juce::AudioProcessorValueTreeState &apvts, con
     attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         apvts, paramID, button
     );
-    
+}
+
+void BasicToggleComponent::setButtonSizeAsFloat(float fractionOfAvailableSpace)
+{
+    buttonSize = fractionOfAvailableSpace;
 }
 
 
@@ -251,7 +255,8 @@ void GUICollection::paint(juce::Graphics& g)
 {
     if (showOutline) {
         g.setColour(accentColour1);
-        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 4.0f, 1.0f);
+        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 0.0f, 0.5f);
+
     }
 }
 

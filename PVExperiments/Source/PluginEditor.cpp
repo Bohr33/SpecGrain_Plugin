@@ -29,6 +29,8 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
 
     delayFreqButton.attach(valueTreeState, "DELAY_FREQUENCY_TOGGLE");
     
+    delayFreqButton.setButtonSizeAsFloat(0.5);
+    
     
     //Add Slider components to collections
     stretchControls.addComponent(stretchTimeSlider);
@@ -139,12 +141,13 @@ void PVExperimentsAudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     int width = getWidth();
-    int height = getHeight();
 
+    int globalSidePadding = 15;
+    int globalTBPadding = 10;
     int headerHeight = 90;
     
     auto bounds = getLocalBounds();
-    auto ninthWidth = width/9.0f;
+    bounds.reduce(globalSidePadding, globalTBPadding);
     
     auto header = bounds.removeFromTop(headerHeight);
     
@@ -152,10 +155,20 @@ void PVExperimentsAudioProcessorEditor::resized()
     Title.padding_bottom = 20.0f;
     Title.setBounds(header);
     
-    stretchControls.setBounds(bounds.removeFromLeft(ninthWidth*2));
-    pitchControls.setBounds(bounds.removeFromLeft(ninthWidth));
-    gateControls.setBounds(bounds.removeFromLeft(ninthWidth));
-    delayControls.setBounds(bounds.removeFromLeft(ninthWidth*4));
-    blurControls.setBounds(bounds.removeFromLeft(ninthWidth));
+    //GUICollectoion Outline
+    juce::FlexBox fb;
+    fb.flexDirection = juce::FlexBox::Direction::row;
+    fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
+    fb.alignItems = juce::FlexBox::AlignItems::stretch;
+
+    float gap = 8.0f; // adjust to taste
+
+    fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin(gap));
+    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.0f).withMargin(gap));
+    fb.items.add(juce::FlexItem(gateControls)   .withFlex(1.0f).withMargin(gap));
+    fb.items.add(juce::FlexItem(delayControls)  .withFlex(4.0f).withMargin(gap));
+    fb.items.add(juce::FlexItem(blurControls)   .withFlex(1.0f).withMargin(gap));
+
+    fb.performLayout(bounds.toFloat());
  
 }
