@@ -61,3 +61,24 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
 };
 
+
+class BasicToggleComponent : public juce::Component
+{
+public:
+    
+    BasicToggleComponent();
+    
+    void attach(juce::AudioProcessorValueTreeState& apvts, const juce::String& paramID);
+    
+    void setText(juce::String newButtonText);
+    
+    void resized() override;
+    
+    juce::TextButton button;
+    juce::Label  textLabel;
+    
+private:
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> attachment;
+    
+};
+

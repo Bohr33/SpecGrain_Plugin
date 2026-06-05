@@ -117,3 +117,41 @@ void BasicDialComponent::attach(juce::AudioProcessorValueTreeState &apvts, const
     valueLabel.setText(juce::String(dial.getValue(), 2), juce::dontSendNotification);
 }
 
+
+
+
+//Toggle Class
+BasicToggleComponent::BasicToggleComponent()
+{
+    button.setToggleable(true);
+    button.setClickingTogglesState(true);
+    textLabel.setJustificationType(juce::Justification::centred);
+    
+    addAndMakeVisible(textLabel);
+    addAndMakeVisible(button);
+    
+};
+
+void BasicToggleComponent::resized()
+{
+    auto bounds = getLocalBounds();
+    auto textBounds = bounds.removeFromTop(getHeight() * 0.25);
+    
+    textLabel.setBounds(textBounds);
+    button.setBounds(bounds);
+    
+}
+
+
+void BasicToggleComponent::setText(juce::String newButtonText)
+{
+    textLabel.setText(newButtonText, juce::dontSendNotification);
+}
+
+void BasicToggleComponent::attach(juce::AudioProcessorValueTreeState &apvts, const juce::String &paramID)
+{
+    attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        apvts, paramID, button
+    );
+    
+}

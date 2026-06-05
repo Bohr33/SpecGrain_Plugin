@@ -15,7 +15,7 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (400, 400);
+    setSize (800, 250);
     
     
     pitchSlider.attach(valueTreeState, "PITCH_SHIFT");
@@ -31,11 +31,12 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
 
     
     //Delay Button
-    delayFreqButtonAttch.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "DELAY_FREQUENCY_TOGGLE", delayFreqButton));
-    
-    delayFreqButton.setToggleable(true);
-    delayFreqButton.setClickingTogglesState(true);
-    delayFreqButton.setButtonText("Toggle Freq Delay");
+    delayFreqButton.attach(valueTreeState, "DELAY_FREQUENCY_TOGGLE");
+//    delayFreqButtonAttch.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "DELAY_FREQUENCY_TOGGLE", delayFreqButton));
+//
+//    delayFreqButton.setToggleable(true);
+//    delayFreqButton.setClickingTogglesState(true);
+//    delayFreqButton.setButtonText("Toggle Freq Delay");
     
     //FFT Menu
     fftSizeMenu.addItem("512", 1);
@@ -83,6 +84,9 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     feedbackSlider.setText("Feedback");
     gateSlider.setText("Gate");
     
+    delayFreqButton.setText("Freq Toggle");
+    addAndMakeVisible(&delayFreqButton);
+    
     
     addAndMakeVisible(&pitchSlider);
     addAndMakeVisible(&blurSlider);
@@ -118,54 +122,75 @@ void PVExperimentsAudioProcessorEditor::resized()
     // subcomponents in your editor..
     int width = getWidth();
     int height = getHeight();
-    
-    //Slider, Label dimensions
-    int numSliders = 4;
-    int sliderWidth = width / numSliders;
-    int sliderHeight = 100;
-    int labelHeight = 40;
 
-    //Bottom Row
-    int row1Y = height - sliderHeight - labelHeight;
-    int rowX = 0;
-    int buttonWidth = sliderWidth;
-    int buttonHeight = labelHeight;
+    int headerHeight = 70;
     
-    //Extras
-    int extrasY = 50;
-    int extrasXPadding = 60;
+    auto bounds = getLocalBounds();
+    auto eigthWidth = width/9.0f;
     
-    //Top Row Extras
-    delayFreqButton.setBounds(width - (buttonWidth + extrasXPadding), extrasY + 20, buttonWidth, buttonHeight);
-    fftSizeLabel.setBounds(extrasXPadding, extrasY, sliderWidth - 10, 30);
-    fftSizeMenu.setBounds(extrasXPadding, extrasY + 30, sliderWidth - 10, 30);
+    auto header = bounds.removeFromTop(headerHeight);
     
-    //Second Row
-    int row2Y = row1Y - sliderHeight - labelHeight;
-    
-    
-    pitchSlider.setBounds(rowX, row2Y, sliderWidth, sliderHeight+labelHeight);
-    
-    blurSlider.setBounds(rowX + sliderWidth, row2Y, sliderWidth, sliderHeight+labelHeight);
-    
-    stretchDensitySlider.setBounds(rowX + sliderWidth * 2, row2Y, sliderWidth, sliderHeight+labelHeight);
 
     
-    stretchTimeSlider.setBounds(rowX + sliderWidth * 3, row2Y, sliderWidth, sliderHeight+labelHeight);
-
+    pitchSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    blurSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    stretchTimeSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    stretchDensitySlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    delayAmtSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    delayTimeSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    feedbackSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    delayFreqButton.setBounds(bounds.removeFromLeft(eigthWidth));
+    gateSlider.setBounds(bounds.removeFromLeft(eigthWidth));
     
-
-    //Bottom Row Sliders
-    gateSlider.setBounds(rowX, row1Y, sliderWidth, sliderHeight+labelHeight);
-
     
-    delayTimeSlider.setBounds(rowX + sliderWidth , row1Y, sliderWidth, sliderHeight+labelHeight);
-
     
-    delayAmtSlider.setBounds(rowX + 2 * sliderWidth , row1Y, sliderWidth, sliderHeight+labelHeight);
-
-    
-    feedbackSlider.setBounds(rowX + 3 * sliderWidth, row1Y, sliderWidth, sliderHeight+labelHeight);
+//    //Slider, Label dimensions
+//    int numSliders = 4;
+//    int sliderWidth = width / numSliders;
+//    int sliderHeight = 100;
+//    int labelHeight = 40;
+//
+//    //Bottom Row
+//    int row1Y = height - sliderHeight - labelHeight;
+//    int rowX = 0;
+//    int buttonWidth = sliderWidth;
+//    int buttonHeight = labelHeight;
+//
+//    //Extras
+//    int extrasY = 50;
+//    int extrasXPadding = 60;
+//
+//    //Top Row Extras
+//    delayFreqButton.setBounds(width - (buttonWidth + extrasXPadding), extrasY + 20, buttonWidth, buttonHeight);
+//    fftSizeLabel.setBounds(extrasXPadding, extrasY, sliderWidth - 10, 30);
+//    fftSizeMenu.setBounds(extrasXPadding, extrasY + 30, sliderWidth - 10, 30);
+//
+//    //Second Row
+//    int row2Y = row1Y - sliderHeight - labelHeight;
+//
+//
+//    pitchSlider.setBounds(rowX, row2Y, sliderWidth, sliderHeight+labelHeight);
+//
+//    blurSlider.setBounds(rowX + sliderWidth, row2Y, sliderWidth, sliderHeight+labelHeight);
+//
+//    stretchDensitySlider.setBounds(rowX + sliderWidth * 2, row2Y, sliderWidth, sliderHeight+labelHeight);
+//
+//
+//    stretchTimeSlider.setBounds(rowX + sliderWidth * 3, row2Y, sliderWidth, sliderHeight+labelHeight);
+//
+//
+//
+//    //Bottom Row Sliders
+//    gateSlider.setBounds(rowX, row1Y, sliderWidth, sliderHeight+labelHeight);
+//
+//
+//    delayTimeSlider.setBounds(rowX + sliderWidth , row1Y, sliderWidth, sliderHeight+labelHeight);
+//
+//
+//    delayAmtSlider.setBounds(rowX + 2 * sliderWidth , row1Y, sliderWidth, sliderHeight+labelHeight);
+//
+//
+//    feedbackSlider.setBounds(rowX + 3 * sliderWidth, row1Y, sliderWidth, sliderHeight+labelHeight);
 
     
 }
