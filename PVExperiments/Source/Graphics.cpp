@@ -113,5 +113,7 @@ void BasicDialComponent::attach(juce::AudioProcessorValueTreeState &apvts, const
     attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         apvts, paramID, dial
     );
+    
+    valueLabel.setText(juce::String(dial.getValue(), 2), juce::dontSendNotification);
 }
 

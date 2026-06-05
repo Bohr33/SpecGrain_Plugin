@@ -32,42 +32,19 @@ private:
     juce::AudioProcessorValueTreeState& valueTreeState;
     
     
-    BasicDialComponent pitchSlider2;
+    BasicDialComponent pitchSlider;
+    BasicDialComponent blurSlider;
+    BasicDialComponent stretchTimeSlider;
+    BasicDialComponent stretchDensitySlider;
+    BasicDialComponent delayAmtSlider;
+    BasicDialComponent delayTimeSlider;
+    BasicDialComponent feedbackSlider;
+    BasicDialComponent gateSlider;
     
-    juce::Slider pitchSlider;
-    juce::Label  pitchSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> pitchSliderAttch;
-    
-    juce::Slider blurSlider;
-    juce::Label  blurSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> blurSliderAttch;
 
-    juce::Slider stretchTimeSlider;
-    juce::Label  stretchTimeSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stretchTimeSliderAttch;
-    
-    juce::Slider stretchDensitySlider;
-    juce::Label  stretchDensitySliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> stretchDensitySliderAttch;
-    
-    juce::Slider delayAmtSlider;
-    juce::Label  delayAmtSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> delayAmtSliderAttch;
 
-    juce::Slider delayTimeSlider;
-    juce::Label  delayTimeSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> delayTimeSliderAttch;
-    
-    juce::Slider feedbackSlider;
-    juce::Label  feedbackLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> feedbackSliderAttch;
-    
     juce::TextButton delayFreqButton;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> delayFreqButtonAttch;
-    
-    juce::Slider gateSlider;
-    juce::Label gateSliderLabel;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> gateSliderAttch;
     
     juce::ComboBox fftSizeMenu;
     juce::Label fftSizeLabel;

@@ -18,77 +18,26 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     setSize (400, 400);
     
     
-    pitchSlider2.attach(valueTreeState, "PITCH_SHIFT");
-//    pitchSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment (valueTreeState, "PITCH_SHIFT", pitchSlider));
-//    pitchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-//    pitchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-//    pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
-//    pitchSliderLabel.setJustificationType(juce::Justification::centred);
-    
-    blurSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "BLUR_AMOUNT", blurSlider));
-    blurSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    blurSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-    blurSliderLabel.setText("Blur Amount", juce::dontSendNotification);
-    blurSliderLabel.setJustificationType(juce::Justification::centred);
-    
-    
-    //Stretch Parameters
-    stretchTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "STRETCH_TIME", stretchTimeSlider));
-    stretchTimeSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    stretchTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-    stretchTimeSliderLabel.setText("Stretch Time", juce::dontSendNotification);
-    stretchTimeSliderLabel.setJustificationType(juce::Justification::centred);
-    
-    stretchDensitySliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "STRETCH_DENSITY", stretchDensitySlider));
-    stretchDensitySlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    stretchDensitySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-    stretchDensitySliderLabel.setText("Stretch Density", juce::dontSendNotification);
-    stretchDensitySliderLabel.setJustificationType(juce::Justification::centred);
-    
-    //Delay Parameters
-    delayAmtSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DELAY_AMOUNT", delayAmtSlider));
-    delayAmtSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    delayAmtSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-    delayAmtSliderLabel.setText("Delay Amount", juce::dontSendNotification);
-    delayAmtSliderLabel.setJustificationType(juce::Justification::centred);
+    pitchSlider.attach(valueTreeState, "PITCH_SHIFT");
+    blurSlider.attach(valueTreeState, "BLUR_AMOUNT");
 
-    delayTimeSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DELAY_TIME", delayTimeSlider));
-    delayTimeSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    delayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
+    stretchTimeSlider.attach(valueTreeState, "STRETCH_TIME");
+    stretchDensitySlider.attach(valueTreeState, "STRETCH_DENSITY");
+
+    delayAmtSlider.attach(valueTreeState, "DELAY_AMOUNT");
+    delayTimeSlider.attach(valueTreeState, "DELAY_TIME");
+    feedbackSlider.attach(valueTreeState, "DELAY_FEEDBACK");
+    gateSlider.attach(valueTreeState, "GATE_AMOUNT");
+
     
-    delayTimeSliderLabel.setText("Delay Time", juce::dontSendNotification);
-    delayTimeSliderLabel.setJustificationType(juce::Justification::centred);
-    
-    feedbackSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "DELAY_FEEDBACK", feedbackSlider));
-    feedbackSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    feedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-    feedbackLabel.setText("Feedback", juce::dontSendNotification);
-    feedbackLabel.setJustificationType(juce::Justification::centred);
-    
+    //Delay Button
     delayFreqButtonAttch.reset(new juce::AudioProcessorValueTreeState::ButtonAttachment(valueTreeState, "DELAY_FREQUENCY_TOGGLE", delayFreqButton));
     
     delayFreqButton.setToggleable(true);
     delayFreqButton.setClickingTogglesState(true);
     delayFreqButton.setButtonText("Toggle Freq Delay");
     
-    
-    //Gate Slider
-    gateSliderAttch.reset(new juce::AudioProcessorValueTreeState::SliderAttachment(valueTreeState, "GATE_AMOUNT", gateSlider));
-    gateSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-    gateSlider.setRange(0.0f, 1.0f, 0.0001);
-    gateSlider.setSkewFactorFromMidPoint(0.1);
-    gateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-    
-    gateSliderLabel.setText("Gate Amount", juce::NotificationType::dontSendNotification);
-    gateSliderLabel.setJustificationType(juce::Justification::centred);
-
-    
+    //FFT Menu
     fftSizeMenu.addItem("512", 1);
     fftSizeMenu.addItem("1024", 2);
     fftSizeMenu.addItem("2048", 3);
@@ -118,37 +67,32 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
         {
             audioProcessor.fftSizeChanged(newFFTSize);
         }
-            
-            
     };
     
     
-    pitchSlider.setColour(juce::Slider::rotarySliderFillColourId, myLookAndFeel.creamColour);
     
     
-    pitchSlider2.setText("Pitch Shift");
-    addAndMakeVisible(&pitchSlider2);
+//    pitchSlider.setColour(juce::Slider::rotarySliderFillColourId, myLookAndFeel.creamColour);
+    
+    pitchSlider.setText("Pitch Shift");
+    blurSlider.setText("Blur");
+    stretchTimeSlider.setText("Time");
+    stretchDensitySlider.setText("Density");
+    delayAmtSlider.setText("Delay Amt");
+    delayTimeSlider.setText("Delay Time");
+    feedbackSlider.setText("Feedback");
+    gateSlider.setText("Gate");
+    
     
     addAndMakeVisible(&pitchSlider);
-    addAndMakeVisible(&pitchSliderLabel);
     addAndMakeVisible(&blurSlider);
-    addAndMakeVisible(&blurSliderLabel);
     addAndMakeVisible(&stretchTimeSlider);
-    addAndMakeVisible(&stretchTimeSliderLabel);
     addAndMakeVisible(&stretchDensitySlider);
-    addAndMakeVisible(&stretchDensitySliderLabel);
     addAndMakeVisible(&delayAmtSlider);
-    addAndMakeVisible(&delayAmtSliderLabel);
     addAndMakeVisible(&delayTimeSlider);
-    addAndMakeVisible(&delayTimeSliderLabel);
-    
     addAndMakeVisible(&feedbackSlider);
-    addAndMakeVisible(&feedbackLabel);
-    
     addAndMakeVisible(&delayFreqButton);
-    
     addAndMakeVisible(&gateSlider);
-    addAndMakeVisible(&gateSliderLabel);
     
     addAndMakeVisible(&fftSizeMenu);
     addAndMakeVisible(&fftSizeLabel);
@@ -200,35 +144,28 @@ void PVExperimentsAudioProcessorEditor::resized()
     int row2Y = row1Y - sliderHeight - labelHeight;
     
     
+    pitchSlider.setBounds(rowX, row2Y, sliderWidth, sliderHeight+labelHeight);
     
+    blurSlider.setBounds(rowX + sliderWidth, row2Y, sliderWidth, sliderHeight+labelHeight);
     
+    stretchDensitySlider.setBounds(rowX + sliderWidth * 2, row2Y, sliderWidth, sliderHeight+labelHeight);
+
     
-    pitchSlider2.setBounds(rowX, row2Y, sliderWidth, sliderHeight+labelHeight);
-    
-//    pitchSlider.setBounds(rowX, row2Y, sliderWidth, sliderHeight);
-//    pitchSliderLabel.setBounds(rowX,  row2Y + sliderHeight, sliderWidth, labelHeight);
-    
-    blurSlider.setBounds(rowX + sliderWidth, row2Y, sliderWidth, sliderHeight);
-    blurSliderLabel.setBounds(rowX + sliderWidth, row2Y + sliderHeight, sliderWidth, labelHeight);
-    
-    stretchDensitySlider.setBounds(rowX + sliderWidth * 2, row2Y, sliderWidth, sliderHeight);
-    stretchDensitySliderLabel.setBounds(rowX + sliderWidth * 2, row2Y + sliderHeight, sliderWidth, labelHeight);
-    
-    stretchTimeSlider.setBounds(rowX + sliderWidth * 3, row2Y, sliderWidth, sliderHeight);
-    stretchTimeSliderLabel.setBounds(rowX + sliderWidth * 3, row2Y + sliderHeight, sliderWidth, labelHeight);
+    stretchTimeSlider.setBounds(rowX + sliderWidth * 3, row2Y, sliderWidth, sliderHeight+labelHeight);
+
     
 
     //Bottom Row Sliders
-    gateSlider.setBounds(rowX, row1Y, sliderWidth, sliderHeight);
-    gateSliderLabel.setBounds(rowX, row1Y + sliderHeight, sliderWidth, labelHeight);
+    gateSlider.setBounds(rowX, row1Y, sliderWidth, sliderHeight+labelHeight);
+
     
-    delayTimeSlider.setBounds(rowX + sliderWidth , row1Y, sliderWidth, sliderHeight);
-    delayTimeSliderLabel.setBounds(rowX + sliderWidth, row1Y + sliderHeight, sliderWidth, labelHeight);
+    delayTimeSlider.setBounds(rowX + sliderWidth , row1Y, sliderWidth, sliderHeight+labelHeight);
+
     
-    delayAmtSlider.setBounds(rowX + 2 * sliderWidth , row1Y, sliderWidth, sliderHeight);
-    delayAmtSliderLabel.setBounds(rowX + 2 * sliderWidth, row1Y + sliderHeight, sliderWidth, labelHeight);
+    delayAmtSlider.setBounds(rowX + 2 * sliderWidth , row1Y, sliderWidth, sliderHeight+labelHeight);
+
     
-    feedbackSlider.setBounds(rowX + 3 * sliderWidth, row1Y, sliderWidth, sliderHeight);
-    feedbackLabel.setBounds(rowX + 3 * sliderWidth, row1Y + sliderHeight, sliderWidth, labelHeight);
+    feedbackSlider.setBounds(rowX + 3 * sliderWidth, row1Y, sliderWidth, sliderHeight+labelHeight);
+
     
 }
