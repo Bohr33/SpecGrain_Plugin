@@ -29,6 +29,8 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
 
     delayFreqButton.attach(valueTreeState, "DELAY_FREQUENCY_TOGGLE");
     
+    
+    //Add Slider components to collections
     stretchControls.addComponent(stretchTimeSlider);
     stretchControls.addComponent(stretchDensitySlider);
     
@@ -36,6 +38,10 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     delayControls.addComponent(feedbackSlider);
     delayControls.addComponent(delayAmtSlider);
     delayControls.addComponent(delayFreqButton);
+    
+    pitchControls.addComponent(pitchSlider);
+    blurControls.addComponent(blurSlider);
+    gateControls.addComponent(gateSlider);
 
     
     //FFT Menu
@@ -71,20 +77,23 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     };
     
         
-    pitchSlider.setText("Pitch Shift");
-    blurSlider.setText("Blur");
+    
+    Title.setText("PVExperiments");
+    
     stretchTimeSlider.setText("Time");
     stretchDensitySlider.setText("Density");
     delayAmtSlider.setText("Delay Amt");
     delayTimeSlider.setText("Delay Time");
     feedbackSlider.setText("Feedback");
-    gateSlider.setText("Gate");
     
+//    pitchSlider.setText("Pitch Shift");
+//    blurSlider.setText("Blur");
+//    gateSlider.setText("Gate");
+
     delayFreqButton.setText("Freq Toggle");
     
-    Title.setText("PVExperiments");
     
-
+    //Set Collection Names and Make Visible
     stretchControls.setCollectionTitle("Stretch");
     addAndMakeVisible(stretchControls);
     
@@ -92,12 +101,19 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     addAndMakeVisible(delayControls);
     
     
-    addAndMakeVisible(&pitchSlider);
-    addAndMakeVisible(&blurSlider);
-    addAndMakeVisible(&gateSlider);
+    pitchControls.setCollectionTitle("Pitch Shift");
+    addAndMakeVisible(pitchControls);
     
+    blurControls.setCollectionTitle("Blur");
+    addAndMakeVisible(blurControls);
+    
+    gateControls.setCollectionTitle("Gate");
+    addAndMakeVisible(gateControls);
+    
+    //FFT Hangovers
     addAndMakeVisible(&fftSizeMenu);
     addAndMakeVisible(&fftSizeLabel);
+    
     
     addAndMakeVisible(&Title);
     
@@ -128,7 +144,7 @@ void PVExperimentsAudioProcessorEditor::resized()
     int headerHeight = 90;
     
     auto bounds = getLocalBounds();
-    auto eigthWidth = width/9.0f;
+    auto ninthWidth = width/9.0f;
     
     auto header = bounds.removeFromTop(headerHeight);
     
@@ -136,12 +152,10 @@ void PVExperimentsAudioProcessorEditor::resized()
     Title.padding_bottom = 20.0f;
     Title.setBounds(header);
     
-    
-
-    pitchSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    blurSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    stretchControls.setBounds(bounds.removeFromLeft(eigthWidth*2));
-    delayControls.setBounds(bounds.removeFromLeft(eigthWidth*4));
-    gateSlider.setBounds(bounds.removeFromLeft(eigthWidth));
+    stretchControls.setBounds(bounds.removeFromLeft(ninthWidth*2));
+    pitchControls.setBounds(bounds.removeFromLeft(ninthWidth));
+    gateControls.setBounds(bounds.removeFromLeft(ninthWidth));
+    delayControls.setBounds(bounds.removeFromLeft(ninthWidth*4));
+    blurControls.setBounds(bounds.removeFromLeft(ninthWidth));
  
 }

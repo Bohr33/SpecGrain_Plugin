@@ -35,6 +35,9 @@ private:
     
     GUICollection stretchControls;
     GUICollection delayControls;
+    GUICollection pitchControls;
+    GUICollection blurControls;
+    GUICollection gateControls;
     
     BasicDialComponent pitchSlider;
     BasicDialComponent blurSlider;

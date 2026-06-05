@@ -53,6 +53,8 @@ public:
     
     juce::Colour accentColour1 = juce::Colour(0xFFF0E7D5);
     
+    bool showOutline = false;
+    
 
     
 private:
@@ -117,9 +119,12 @@ public:
     void addDial(BasicDialComponent& dial);
     void addToggle(BasicToggleComponent& toggle);
     
+    juce::Colour accentColour1 = juce::Colour(0xFFF0E7D5);
     
     void resized() override;
     void paint(juce::Graphics& g) override;
+    
+    bool showOutline = true;
     
     
 private:

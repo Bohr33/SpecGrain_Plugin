@@ -59,25 +59,16 @@ BasicDialComponent::BasicDialComponent()
     addAndMakeVisible(nameLabel);
     addAndMakeVisible(dial);
     addAndMakeVisible(valueLabel);
-    
-    
-    
-//    pitchSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
-//    pitchSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
-//
-//    pitchSliderLabel.setText("Pitch Shift", juce::dontSendNotification);
-//    pitchSliderLabel.setJustificationType(juce::Justification::centred);
-    
-    
+
 }
 
 
 void BasicDialComponent::paint(juce::Graphics &g)
 {
-    
-    g.setColour(accentColour1);
-    g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 4.0f, 1.0f);
-
+    if (showOutline) {
+        g.setColour(accentColour1);
+        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 4.0f, 1.0f);
+    }
 }
 
 
@@ -258,8 +249,10 @@ void GUICollection::resized()
 
 void GUICollection::paint(juce::Graphics& g)
 {
-//    g.setColour(juce::Colours::red);
-//    g.fillAll();
+    if (showOutline) {
+        g.setColour(accentColour1);
+        g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 4.0f, 1.0f);
+    }
 }
 
 
