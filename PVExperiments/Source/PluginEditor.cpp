@@ -15,8 +15,6 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
-    setSize (800, 250);
-    
     
     pitchSlider.attach(valueTreeState, "PITCH_SHIFT");
     blurSlider.attach(valueTreeState, "BLUR_AMOUNT");
@@ -30,6 +28,14 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     gateSlider.attach(valueTreeState, "GATE_AMOUNT");
 
     delayFreqButton.attach(valueTreeState, "DELAY_FREQUENCY_TOGGLE");
+    
+    stretchControls.addComponent(stretchTimeSlider);
+    stretchControls.addComponent(stretchDensitySlider);
+    
+    delayControls.addComponent(delayTimeSlider);
+    delayControls.addComponent(feedbackSlider);
+    delayControls.addComponent(delayAmtSlider);
+    delayControls.addComponent(delayFreqButton);
 
     
     //FFT Menu
@@ -64,11 +70,7 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
         }
     };
     
-    
-    
-    
-//    pitchSlider.setColour(juce::Slider::rotarySliderFillColourId, myLookAndFeel.creamColour);
-    
+        
     pitchSlider.setText("Pitch Shift");
     blurSlider.setText("Blur");
     stretchTimeSlider.setText("Time");
@@ -81,17 +83,17 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     delayFreqButton.setText("Freq Toggle");
     
     Title.setText("PVExperiments");
-    addAndMakeVisible(&delayFreqButton);
+    
+
+    stretchControls.setCollectionTitle("Stretch");
+    addAndMakeVisible(stretchControls);
+    
+    delayControls.setCollectionTitle("Delay");
+    addAndMakeVisible(delayControls);
     
     
     addAndMakeVisible(&pitchSlider);
     addAndMakeVisible(&blurSlider);
-    addAndMakeVisible(&stretchTimeSlider);
-    addAndMakeVisible(&stretchDensitySlider);
-    addAndMakeVisible(&delayAmtSlider);
-    addAndMakeVisible(&delayTimeSlider);
-    addAndMakeVisible(&feedbackSlider);
-    addAndMakeVisible(&delayFreqButton);
     addAndMakeVisible(&gateSlider);
     
     addAndMakeVisible(&fftSizeMenu);
@@ -100,6 +102,8 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     addAndMakeVisible(&Title);
     
     setLookAndFeel(&myLookAndFeel);
+    
+    setSize (800, 250);
 }
 
 PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
@@ -136,12 +140,8 @@ void PVExperimentsAudioProcessorEditor::resized()
 
     pitchSlider.setBounds(bounds.removeFromLeft(eigthWidth));
     blurSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    stretchTimeSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    stretchDensitySlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    delayAmtSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    delayTimeSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    feedbackSlider.setBounds(bounds.removeFromLeft(eigthWidth));
-    delayFreqButton.setBounds(bounds.removeFromLeft(eigthWidth));
+    stretchControls.setBounds(bounds.removeFromLeft(eigthWidth*2));
+    delayControls.setBounds(bounds.removeFromLeft(eigthWidth*4));
     gateSlider.setBounds(bounds.removeFromLeft(eigthWidth));
  
 }

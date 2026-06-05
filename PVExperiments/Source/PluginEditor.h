@@ -31,6 +31,10 @@ private:
     PVExperimentsAudioProcessor& audioProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
     
+    TitleWithUnderline Title;
+    
+    GUICollection stretchControls;
+    GUICollection delayControls;
     
     BasicDialComponent pitchSlider;
     BasicDialComponent blurSlider;
@@ -47,7 +51,7 @@ private:
     juce::ComboBox fftSizeMenu;
     juce::Label fftSizeLabel;
     
-    TitleWithUnderline Title;
+    
     
     MyLookAndFeel myLookAndFeel;
     

@@ -74,9 +74,10 @@ BasicDialComponent::BasicDialComponent()
 
 void BasicDialComponent::paint(juce::Graphics &g)
 {
+    
     g.setColour(accentColour1);
     g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 4.0f, 1.0f);
-    
+
 }
 
 
@@ -194,5 +195,71 @@ void TitleWithUnderline::paint(juce::Graphics& g)
     g.drawLine(bounds.getX() + sidePadding + padding_sides, bounds.getBottom() - bottomPadding, bounds.getRight() - (sidePadding + padding_sides), bounds.getBottom() - bottomPadding, 1.0f);
 }
 
+
+//GUICollection
+GUICollection::GUICollection()
+{
+    addAndMakeVisible(title);
+}
+
+void GUICollection::setCollectionTitle(juce::String newTitle)
+{
+    title.setText(newTitle);
+}
+
+void GUICollection::addDial(BasicDialComponent &dial)
+{
+    DBG("Added Dial");
+//    dials.push_back(&dial);
+    controls.push_back(&dial);
+    addAndMakeVisible(dial);
+}
+
+void GUICollection::addToggle(BasicToggleComponent &toggle)
+{
+    DBG("Added toggle");
+//    toggles.push_back(&toggle);
+    controls.push_back(&toggle);
+    addAndMakeVisible(toggle);
+}
+
+void GUICollection::addComponent(juce::Component &component)
+{
+    controls.push_back(&component);
+    addAndMakeVisible(component);
+}
+
+
+void GUICollection::resized()
+{
+    auto bounds = getLocalBounds();
+    
+    auto header = bounds.removeFromTop(getHeight()/4.0f);
+    
+    title.setBounds(header);
+
+    //Flex box for componenets
+    juce::FlexBox fb;
+    fb.flexDirection = juce::FlexBox::Direction::row;
+    fb.justifyContent = juce::FlexBox::JustifyContent::center;
+    fb.alignItems = juce::FlexBox::AlignItems::center;
+
+    for (auto* control : controls)
+    {
+        fb.items.add(juce::FlexItem(*control)
+                        .withFlex(1.0f)
+                        .withHeight(bounds.getHeight())
+                        .withMargin(1.0f));
+    }
+
+    fb.performLayout(bounds);
+    
+}
+
+void GUICollection::paint(juce::Graphics& g)
+{
+//    g.setColour(juce::Colours::red);
+//    g.fillAll();
+}
 
 

@@ -100,3 +100,31 @@ public:
     int padding_sides = 0.0f;
 };
 
+
+
+
+class GUICollection :  public juce::Component
+{
+public:
+    
+    GUICollection();
+    
+    void setCollectionTitle(juce::String newTitle);
+    
+    void addComponent(juce::Component& component);
+    
+    //Probably Don't need these any more
+    void addDial(BasicDialComponent& dial);
+    void addToggle(BasicToggleComponent& toggle);
+    
+    
+    void resized() override;
+    void paint(juce::Graphics& g) override;
+    
+    
+private:
+    TitleWithUnderline title;
+    
+    std::vector<juce::Component*> controls;
+};
+
