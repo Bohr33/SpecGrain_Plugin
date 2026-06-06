@@ -36,7 +36,16 @@ public:
                           float rotaryEndAngle,
                           juce::Slider & ) override;
     
+    
+    juce::Font getLabelFont(juce::Label& label) override;
+    
+    juce::Font getMyFont();
+    
 
+    
+    
+private:
+    juce::Typeface::Ptr myFont;
 };
 
 
@@ -111,6 +120,8 @@ public:
     void setText(juce::String newTitle);
     void setUnderlineHeightDelta(int newValue);
     void toggleUnderline(bool newDecision);
+    void setFontSizeAsProportionOfSpace(float newValue);
+    
     
     int padding_bottom = 0.0f;
     int padding_sides = 0.0f;
@@ -119,6 +130,8 @@ private:
     
     bool showUnderline = true;
     int lineDelta = 0;
+    float fontProportion = 0.9f;
+    
     
     juce::Rectangle<int> m_titleBounds;
 };

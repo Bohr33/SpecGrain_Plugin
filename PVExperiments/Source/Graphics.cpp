@@ -15,6 +15,12 @@ MyLookAndFeel::MyLookAndFeel()
 {
     //SetGlobal Colors
     setColour(juce::Label::textColourId, MyColours::accent1);
+    
+    
+    myFont = juce::Typeface::createSystemTypefaceFor(BinaryData::ZenMaruGothicLight_ttf, BinaryData::ZenMaruGothicLight_ttfSize);
+    
+    jassert(myFont != nullptr);
+    DBG("Font loaded: " << myFont->getName());
 }
 
 void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider &slider)
@@ -48,10 +54,22 @@ void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width,
     
 }
 
+juce::Font MyLookAndFeel::getLabelFont(juce::Label& label)
+{
+    jassert(myFont != nullptr);
+    
+    return juce::Font(juce::FontOptions{}.withName(myFont->getName()).withStyle(myFont->getStyle()).withHeight(label.getHeight()));
+}
 
 
 
 
+
+
+
+
+
+//Dial Component
 BasicDialComponent::BasicDialComponent()
 {
     dial.setSliderStyle(juce::Slider::SliderStyle::RotaryVerticalDrag);
@@ -187,9 +205,20 @@ void TitleWithUnderline::setText(juce::String newTitle)
 
 void TitleWithUnderline::resized()
 {
-    titleLabel.setFont(juce::FontOptions(getHeight()* 0.5f));
-    
     auto titleBounds = getLocalBounds().reduced(padding_sides, 0).removeFromTop(getHeight() - padding_bottom);;
+    
+    auto halfWidth = getWidth()/2.0f;
+    auto halfHeight = getHeight()/2.0f;
+    
+//    auto fontReduceX = halfWidth - halfWidth * fontProportion;
+//    auto fontReduceY = halfHeight - halfHeight * fontProportion;
+    
+    titleBounds.removeFromRight(static_cast<int>(titleBounds.getWidth() * (1.0 - fontProportion)));
+//    titleBounds.removeFromTop(static_cast<int>(titleBounds.getHeight() * (1.0 - fontProportion)));
+//    titleBounds.reduce(0.0f, titleBounds.getHeight()/2.0f * (1.0f - fontProportion));
+    titleBounds.removeFromBottom(static_cast<int>(titleBounds.getHeight() * (1.0 - fontProportion)));
+    
+//    titleBounds.reduce(fontReduceX, fontReduceY);
     
     m_titleBounds = titleBounds;
     
@@ -223,6 +252,12 @@ void TitleWithUnderline::toggleUnderline(bool newDecision)
 {
     showUnderline = newDecision;
 }
+
+void TitleWithUnderline::setFontSizeAsProportionOfSpace(float newValue)
+{
+    fontProportion = newValue;
+}
+
 
 
 //GUICollection

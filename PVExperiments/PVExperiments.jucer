@@ -4,7 +4,10 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginFormats="buildAU,buildAUv3,buildVST3"
               cppLanguageStandard="20" pluginCode="Vygw">
   <MAINGROUP id="ot0lOV" name="PVExperiments">
-    <GROUP id="{3A887F4C-CA58-86DC-B7C0-DFCF3E0D1C11}" name="New Group"/>
+    <GROUP id="{373F5BC1-5BB5-02A3-8D91-1B7AC61C98A5}" name="Rescources">
+      <FILE id="LF4sha" name="ZenMaruGothic-Light.ttf" compile="0" resource="1"
+            file="Rescources/ZenMaruGothic-Light.ttf"/>
+    </GROUP>
     <GROUP id="{31CF6EEB-29C9-6A06-BBF6-253EC601B5D6}" name="Source">
       <FILE id="kxhpA2" name="Graphics.cpp" compile="1" resource="0" file="Source/Graphics.cpp"/>
       <FILE id="U33mdU" name="Graphics.h" compile="0" resource="0" file="Source/Graphics.h"/>

@@ -148,8 +148,6 @@ void PVExperimentsAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-    int width = getWidth();
-
     int globalPadH = 35;
     int globalPadV = 15;
     int headerHeight = 90;
@@ -161,7 +159,9 @@ void PVExperimentsAudioProcessorEditor::resized()
     
     title.padding_sides = 7.0f;
     title.padding_bottom = 5.0f;
+    title.setFontSizeAsProportionOfSpace(0.8);
     title.setBounds(header);
+    
     
     //GUICollectoion Outline
     juce::FlexBox fb;
@@ -172,10 +172,10 @@ void PVExperimentsAudioProcessorEditor::resized()
     float gap = 5.0f; // adjust to taste
 
     fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin({ gap, 0.0f, gap, gap }));
-    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.3f).withMargin(gap));
+    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.7f).withMargin(gap));
     fb.items.add(juce::FlexItem(gateControls)   .withFlex(1.0f).withMargin(gap));
     fb.items.add(juce::FlexItem(delayControls)  .withFlex(4.0f).withMargin(gap));
-    fb.items.add(juce::FlexItem(blurControls)   .withFlex(1.0f).withMargin(gap));
+    fb.items.add(juce::FlexItem(blurControls)   .withFlex(1.3f).withMargin(gap));
 
     fb.performLayout(bounds.toFloat());
  
