@@ -104,8 +104,11 @@ void BasicDialComponent::resized()
     auto quarterHeight = totalHeight * 0.25f;
     auto halfHeight = totalHeight * 0.5;
     
-    auto titleBounds = bounds.removeFromTop(quarterHeight);
     
+    
+    auto titleBounds = bounds.removeFromTop(quarterHeight);
+//    titleBounds.reduce(titleBounds.getWidth()*(1-titleSizeFactor), 0.0f);
+    titleBounds.removeFromTop(titleBounds.getHeight()*(1-titleSizeFactor));
     
     
     auto dialBounds = bounds.removeFromTop(halfHeight);
@@ -144,6 +147,11 @@ void BasicDialComponent::setDialSize(float newSize)
     dialScaleFactor = newSize;
 }
 
+void BasicDialComponent::setTitleSize(float newSize)
+{
+    titleSizeFactor = newSize;
+}
+
 
 
 
@@ -163,9 +171,22 @@ void BasicToggleComponent::resized()
 {
     auto bounds = getLocalBounds();
     auto textBounds = bounds.removeFromTop(getHeight() * 0.25);
+    textBounds.removeFromTop(textBounds.getHeight()*(1.0f-titleSizeFactor));
+    
+    
+    int buttonPadTop = 10;
+    
+    bounds.removeFromTop(buttonPadTop);
+
+    
+    bounds.reduce(bounds.getWidth()/2.0f * (1.0f-buttonSize), 0);
+    
+    int minDim = juce::jmin(bounds.getWidth(), bounds.getHeight());
+    if(isSquare)
+        bounds.removeFromBottom(bounds.getHeight() - minDim);
     
     textLabel.setBounds(textBounds);
-    button.setBounds(bounds.reduced(bounds.getWidth()/2.0f * buttonSize));
+    button.setBounds(bounds);
     
 }
 
@@ -185,6 +206,11 @@ void BasicToggleComponent::attach(juce::AudioProcessorValueTreeState &apvts, con
 void BasicToggleComponent::setButtonSizeAsFloat(float fractionOfAvailableSpace)
 {
     buttonSize = fractionOfAvailableSpace;
+}
+
+void BasicToggleComponent::setTitleSize(float newSize)
+{
+    titleSizeFactor = newSize;
 }
 
 
@@ -244,7 +270,7 @@ void TitleWithUnderline::paint(juce::Graphics& g)
         g.setColour(textColour);
         
         
-        g.drawLine(m_titleBounds.getX(), m_titleBounds.getBottom() + lineDelta, m_titleBounds.getRight(), m_titleBounds.getBottom() + lineDelta, 1.0f);
+        g.drawLine(m_titleBounds.getX(), m_titleBounds.getBottom() + lineDelta, getLocalBounds().getRight(), m_titleBounds.getBottom() + lineDelta, 1.0f);
     }
 }
 

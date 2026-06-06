@@ -85,15 +85,15 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     
     stretchTimeSlider.setText("Time");
     stretchDensitySlider.setText("Density");
-    delayAmtSlider.setText("Delay Amt");
-    delayTimeSlider.setText("Delay Time");
+    delayAmtSlider.setText("Amout");
+    delayTimeSlider.setText("Time");
     feedbackSlider.setText("Feedback");
     
 //    pitchSlider.setText("Pitch Shift");
 //    blurSlider.setText("Blur");
 //    gateSlider.setText("Gate");
 
-    delayFreqButton.setText("Freq Toggle");
+    delayFreqButton.setText("Freq Mode");
     
     
     //Set Collection Names and Make Visible
@@ -166,10 +166,10 @@ void PVExperimentsAudioProcessorEditor::resized()
     //GUICollectoion Outline
     juce::FlexBox fb;
     fb.flexDirection = juce::FlexBox::Direction::row;
-    fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
+//    fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
     fb.alignItems = juce::FlexBox::AlignItems::stretch;
 
-    float gap = 5.0f; // adjust to taste
+    float gap = 0.0f; // adjust to taste
 
     fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin({ gap, 0.0f, gap, gap }));
     fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.7f).withMargin(gap));

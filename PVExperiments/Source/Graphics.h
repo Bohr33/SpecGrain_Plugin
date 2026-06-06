@@ -59,6 +59,7 @@ public:
     void resized() override;
     void setText(juce::String newText);
     void setDialSize(float newSize);
+    void setTitleSize(float newSize);
     
     void attach(juce::AudioProcessorValueTreeState& apvts, const juce::String& paramID);
     
@@ -76,6 +77,7 @@ private:
     void sliderValueChanged(juce::Slider* slider) override;
     
     float dialScaleFactor = 0.9f;
+    float titleSizeFactor = 0.8f;
     
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
 };
@@ -93,6 +95,9 @@ public:
     
     void setButtonSizeAsFloat(float fractionOfAvailableSpace);
     
+    void setTitleSize(float newSize);
+    
+    
     void resized() override;
     
     juce::TextButton button;
@@ -100,8 +105,9 @@ public:
     
 private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> attachment;
-    
+    bool isSquare = true;
     float buttonSize = 0.5f;
+    float titleSizeFactor = 0.8f;
     
 };
 
