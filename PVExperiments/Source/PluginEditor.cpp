@@ -44,6 +44,7 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     pitchControls.addComponent(pitchSlider);
     blurControls.addComponent(blurSlider);
     gateControls.addComponent(gateSlider);
+    
 
     
     //FFT Menu
@@ -80,7 +81,7 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     
         
     
-    Title.setText("PVExperiments");
+    title.setText("PVExperiments");
     
     stretchTimeSlider.setText("Time");
     stretchDensitySlider.setText("Density");
@@ -123,7 +124,8 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     addAndMakeVisible(&fftSizeLabel);
     
     //Title
-    addAndMakeVisible(&Title);
+    addAndMakeVisible(&title);
+    title.toggleUnderline(false);
     
     setLookAndFeel(&myLookAndFeel);
     
@@ -139,7 +141,7 @@ PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
 void PVExperimentsAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll(juce::Colour::fromRGB(13, 17, 22));
+    g.fillAll(MyColours::background);
 }
 
 void PVExperimentsAudioProcessorEditor::resized()
@@ -148,18 +150,18 @@ void PVExperimentsAudioProcessorEditor::resized()
     // subcomponents in your editor..
     int width = getWidth();
 
-    int globalSidePadding = 15;
-    int globalTBPadding = 10;
+    int globalPadH = 35;
+    int globalPadV = 15;
     int headerHeight = 90;
     
     auto bounds = getLocalBounds();
-    bounds.reduce(globalSidePadding, globalTBPadding);
+    bounds.reduce(globalPadH, globalPadV);
     
     auto header = bounds.removeFromTop(headerHeight);
     
-    Title.padding_sides = 7.0f;
-    Title.padding_bottom = 20.0f;
-    Title.setBounds(header);
+    title.padding_sides = 7.0f;
+    title.padding_bottom = 5.0f;
+    title.setBounds(header);
     
     //GUICollectoion Outline
     juce::FlexBox fb;
@@ -167,10 +169,10 @@ void PVExperimentsAudioProcessorEditor::resized()
     fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
     fb.alignItems = juce::FlexBox::AlignItems::stretch;
 
-    float gap = 8.0f; // adjust to taste
+    float gap = 5.0f; // adjust to taste
 
-    fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin(gap));
-    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.0f).withMargin(gap));
+    fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin({ gap, 0.0f, gap, gap }));
+    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.3f).withMargin(gap));
     fb.items.add(juce::FlexItem(gateControls)   .withFlex(1.0f).withMargin(gap));
     fb.items.add(juce::FlexItem(delayControls)  .withFlex(4.0f).withMargin(gap));
     fb.items.add(juce::FlexItem(blurControls)   .withFlex(1.0f).withMargin(gap));

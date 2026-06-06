@@ -31,7 +31,7 @@ private:
     PVExperimentsAudioProcessor& audioProcessor;
     juce::AudioProcessorValueTreeState& valueTreeState;
     
-    TitleWithUnderline Title;
+    TitleWithUnderline title;
     
     GUICollection stretchControls;
     GUICollection delayControls;

@@ -10,6 +10,13 @@
 
 #include "Graphics.h"
 
+
+MyLookAndFeel::MyLookAndFeel()
+{
+    //SetGlobal Colors
+    setColour(juce::Label::textColourId, MyColours::accent1);
+}
+
 void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider &slider)
 {
     auto size = juce::jmin(width, height);
@@ -80,8 +87,13 @@ void BasicDialComponent::resized()
     auto halfHeight = totalHeight * 0.5;
     
     auto titleBounds = bounds.removeFromTop(quarterHeight);
-    auto dialBounds = bounds.removeFromTop(halfHeight);
     
+    
+    
+    auto dialBounds = bounds.removeFromTop(halfHeight);
+    int dialBoundsScaleX = dialBounds.getWidth() - (dialBounds.getWidth() * dialScaleFactor);
+    int dialBoundsScaleY = dialBounds.getHeight() - dialBounds.getHeight() * dialScaleFactor;
+    dialBounds.reduce(dialBoundsScaleX, dialBoundsScaleY);
     
     nameLabel.setBounds(titleBounds);
     dial.setBounds(dialBounds.toNearestInt());
@@ -107,6 +119,11 @@ void BasicDialComponent::attach(juce::AudioProcessorValueTreeState &apvts, const
     );
     
     valueLabel.setText(juce::String(dial.getValue(), 2), juce::dontSendNotification);
+}
+
+void BasicDialComponent::setDialSize(float newSize)
+{
+    dialScaleFactor = newSize;
 }
 
 
@@ -186,21 +203,25 @@ void TitleWithUnderline::setUnderlineHeightDelta(int newValue)
 
 void TitleWithUnderline::paint(juce::Graphics& g)
 {
-    
-    auto bounds = getLocalBounds().toFloat();
-    
-    bounds.removeFromBottom(padding_bottom);
-    
-    g.setColour(juce::Colours::white);
-    
-    
-    auto sidePadding = 8.0f;
-    auto bottomPadding = 5.0f;
-    
-//    g.drawLine(bounds.getX() + sidePadding + padding_sides, bounds.getBottom() - bottomPadding, bounds.getRight() - (sidePadding + padding_sides), bounds.getBottom() - bottomPadding, 1.0f);
-    
-    
-    g.drawLine(m_titleBounds.getX(), m_titleBounds.getBottom() + lineDelta, m_titleBounds.getRight(), m_titleBounds.getBottom() + lineDelta, 1.0f);
+    if(showUnderline)
+    {
+        auto bounds = getLocalBounds().toFloat();
+        
+        bounds.removeFromBottom(padding_bottom);
+        
+        auto& laf = getLookAndFeel();
+        auto textColour = laf.findColour(juce::Label::textColourId);
+        
+        g.setColour(textColour);
+        
+        
+        g.drawLine(m_titleBounds.getX(), m_titleBounds.getBottom() + lineDelta, m_titleBounds.getRight(), m_titleBounds.getBottom() + lineDelta, 1.0f);
+    }
+}
+
+void TitleWithUnderline::toggleUnderline(bool newDecision)
+{
+    showUnderline = newDecision;
 }
 
 
@@ -240,16 +261,19 @@ void GUICollection::addComponent(juce::Component &component)
 
 void GUICollection::resized()
 {
-    auto bounds = getLocalBounds();
     
-    int headerPadH = 10;
+    
+    int headerPadH = 20;
     int headerPadV = 0;
+    
+    auto bounds = getLocalBounds().reduced(headerPadH, headerPadV);
     
     auto header = bounds.removeFromTop(getHeight()/4.0f);
     
-    auto titleBounds = header.reduced(headerPadH, headerPadV);
+    auto titleBounds = header;
     
     title.setBounds(titleBounds);
+    
     
     
 
@@ -264,7 +288,7 @@ void GUICollection::resized()
         fb.items.add(juce::FlexItem(*control)
                         .withFlex(1.0f)
                         .withHeight(bounds.getHeight())
-                        .withMargin(1.0f));
+                        .withMargin(3.0f));
     }
 
     fb.performLayout(bounds);
@@ -274,7 +298,9 @@ void GUICollection::resized()
 void GUICollection::paint(juce::Graphics& g)
 {
     if (showOutline) {
-        g.setColour(accentColour1);
+        auto& laf = getLookAndFeel();
+        
+        g.setColour(laf.findColour(juce::Label::textColourId));
         g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(1.0f), 0.0f, 0.5f);
 
     }
