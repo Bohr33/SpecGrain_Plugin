@@ -19,6 +19,18 @@ MyLookAndFeel::MyLookAndFeel()
     
     myFont = juce::Typeface::createSystemTypefaceFor(BinaryData::ZenMaruGothicLight_ttf, BinaryData::ZenMaruGothicLight_ttfSize);
     
+    
+    setColour(juce::ComboBox::backgroundColourId, MyColours::accent1);
+    setColour(juce::ComboBox::textColourId, MyColours::background);
+    setColour(juce::ComboBox::outlineColourId, MyColours::accent1);
+    setColour(juce::ComboBox::arrowColourId, MyColours::background);
+    
+    setColour(juce::PopupMenu::backgroundColourId,            MyColours::accent1);
+    setColour(juce::PopupMenu::textColourId,                  MyColours::background);
+    setColour(juce::PopupMenu::highlightedBackgroundColourId, MyColours::background);
+    setColour(juce::PopupMenu::highlightedTextColourId,       MyColours::accent1);
+    
+    
     jassert(myFont != nullptr);
     DBG("Font loaded: " << myFont->getName());
 }
@@ -59,6 +71,16 @@ juce::Font MyLookAndFeel::getLabelFont(juce::Label& label)
     jassert(myFont != nullptr);
     
     return juce::Font(juce::FontOptions{}.withName(myFont->getName()).withStyle(myFont->getStyle()).withHeight(label.getHeight()));
+}
+
+juce::Font MyLookAndFeel::getComboBoxFont(juce::ComboBox& comboBox)
+{
+    return juce::Font(juce::FontOptions{}.withName(myFont->getName()).withStyle(myFont->getStyle()).withHeight(comboBox.getHeight()));
+}
+
+juce::Font MyLookAndFeel::getPopupMenuFont()
+{
+    return juce::Font(juce::FontOptions{}.withName(myFont->getName()).withStyle(myFont->getStyle()).withPointHeight(30));;
 }
 
 

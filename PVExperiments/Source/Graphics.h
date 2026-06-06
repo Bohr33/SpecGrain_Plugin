@@ -38,6 +38,9 @@ public:
     
     
     juce::Font getLabelFont(juce::Label& label) override;
+    juce::Font getComboBoxFont(juce::ComboBox& comboBox) override;
+
+    juce::Font getPopupMenuFont() override;
     
     juce::Font getMyFont();
     
