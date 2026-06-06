@@ -97,31 +97,37 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     
     //Set Collection Names and Make Visible
     stretchControls.setCollectionTitle("Stretch");
+    stretchControls.title.setUnderlineHeightDelta(-5);
     addAndMakeVisible(stretchControls);
     
+    
     delayControls.setCollectionTitle("Delay");
+    delayControls.title.setUnderlineHeightDelta(-5);
     addAndMakeVisible(delayControls);
     
     
     pitchControls.setCollectionTitle("Pitch Shift");
+    pitchControls.title.setUnderlineHeightDelta(-5);
     addAndMakeVisible(pitchControls);
     
     blurControls.setCollectionTitle("Blur");
+    blurControls.title.setUnderlineHeightDelta(-5);
     addAndMakeVisible(blurControls);
     
     gateControls.setCollectionTitle("Gate");
+    gateControls.title.setUnderlineHeightDelta(-5);
     addAndMakeVisible(gateControls);
     
     //FFT Hangovers
     addAndMakeVisible(&fftSizeMenu);
     addAndMakeVisible(&fftSizeLabel);
     
-    
+    //Title
     addAndMakeVisible(&Title);
     
     setLookAndFeel(&myLookAndFeel);
     
-    setSize (800, 250);
+    setSize (1000, 312.5);
 }
 
 PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()

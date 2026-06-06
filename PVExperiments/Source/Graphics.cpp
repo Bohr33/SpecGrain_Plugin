@@ -154,9 +154,12 @@ void BasicToggleComponent::setButtonSizeAsFloat(float fractionOfAvailableSpace)
 
 
 
+
+//TItle/Underline Class
 TitleWithUnderline::TitleWithUnderline()
 {
     titleLabel.setJustificationType(juce::Justification::left);
+    titleLabel.setBorderSize(juce::BorderSize<int>(0));
     addAndMakeVisible(titleLabel);
 }
 
@@ -171,7 +174,14 @@ void TitleWithUnderline::resized()
     
     auto titleBounds = getLocalBounds().reduced(padding_sides, 0).removeFromTop(getHeight() - padding_bottom);;
     
+    m_titleBounds = titleBounds;
+    
     titleLabel.setBounds(titleBounds);
+}
+
+void TitleWithUnderline::setUnderlineHeightDelta(int newValue)
+{
+    lineDelta = newValue;
 }
 
 void TitleWithUnderline::paint(juce::Graphics& g)
@@ -187,7 +197,10 @@ void TitleWithUnderline::paint(juce::Graphics& g)
     auto sidePadding = 8.0f;
     auto bottomPadding = 5.0f;
     
-    g.drawLine(bounds.getX() + sidePadding + padding_sides, bounds.getBottom() - bottomPadding, bounds.getRight() - (sidePadding + padding_sides), bounds.getBottom() - bottomPadding, 1.0f);
+//    g.drawLine(bounds.getX() + sidePadding + padding_sides, bounds.getBottom() - bottomPadding, bounds.getRight() - (sidePadding + padding_sides), bounds.getBottom() - bottomPadding, 1.0f);
+    
+    
+    g.drawLine(m_titleBounds.getX(), m_titleBounds.getBottom() + lineDelta, m_titleBounds.getRight(), m_titleBounds.getBottom() + lineDelta, 1.0f);
 }
 
 
@@ -229,9 +242,16 @@ void GUICollection::resized()
 {
     auto bounds = getLocalBounds();
     
+    int headerPadH = 10;
+    int headerPadV = 0;
+    
     auto header = bounds.removeFromTop(getHeight()/4.0f);
     
-    title.setBounds(header);
+    auto titleBounds = header.reduced(headerPadH, headerPadV);
+    
+    title.setBounds(titleBounds);
+    
+    
 
     //Flex box for componenets
     juce::FlexBox fb;

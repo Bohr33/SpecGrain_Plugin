@@ -101,9 +101,16 @@ public:
     void resized() override;
     void paint(juce::Graphics& g) override;
     void setText(juce::String newTitle);
+    void setUnderlineHeightDelta(int newValue);
     
     int padding_bottom = 0.0f;
     int padding_sides = 0.0f;
+    
+private:
+    
+    int lineDelta = 0;
+    
+    juce::Rectangle<int> m_titleBounds;
 };
 
 
@@ -125,14 +132,19 @@ public:
     
     juce::Colour accentColour1 = juce::Colour(0xFFF0E7D5);
     
+    
+    
     void resized() override;
     void paint(juce::Graphics& g) override;
     
     bool showOutline = true;
     
+    TitleWithUnderline title;
     
 private:
-    TitleWithUnderline title;
+    
+    
+    juce::Rectangle<int> m_titleBounds;
     
     std::vector<juce::Component*> controls;
 };
