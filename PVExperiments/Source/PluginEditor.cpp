@@ -129,6 +129,7 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     
     setLookAndFeel(&myLookAndFeel);
     
+    setResizable(true, true);
     setSize (1000, 312.5);
 }
 
@@ -172,7 +173,7 @@ void PVExperimentsAudioProcessorEditor::resized()
     float gap = 0.0f; // adjust to taste
 
     fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin({ gap, 0.0f, gap, gap }));
-    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.7f).withMargin(gap));
+    fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.9f).withMargin(gap));
     fb.items.add(juce::FlexItem(gateControls)   .withFlex(1.0f).withMargin(gap));
     fb.items.add(juce::FlexItem(delayControls)  .withFlex(4.0f).withMargin(gap));
     fb.items.add(juce::FlexItem(blurControls)   .withFlex(1.3f).withMargin(gap));
