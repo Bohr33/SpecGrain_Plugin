@@ -324,7 +324,7 @@ void GUICollection::resized()
 {
     
     
-    int headerPadH = 20;
+    int headerPadH = 0;
     int headerPadV = 0;
     
     auto bounds = getLocalBounds().reduced(headerPadH, headerPadV);
@@ -349,7 +349,7 @@ void GUICollection::resized()
         fb.items.add(juce::FlexItem(*control)
                         .withFlex(1.0f)
                         .withHeight(bounds.getHeight())
-                        .withMargin(3.0f));
+                        .withMargin(0.0f));
     }
 
     fb.performLayout(bounds);

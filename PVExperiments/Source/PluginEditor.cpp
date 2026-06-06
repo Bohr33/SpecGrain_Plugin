@@ -85,38 +85,42 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     
     stretchTimeSlider.setText("Time");
     stretchDensitySlider.setText("Density");
-    delayAmtSlider.setText("Amout");
+    delayAmtSlider.setText("Amount");
     delayTimeSlider.setText("Time");
     feedbackSlider.setText("Feedback");
-    
-//    pitchSlider.setText("Pitch Shift");
-//    blurSlider.setText("Blur");
-//    gateSlider.setText("Gate");
 
     delayFreqButton.setText("Freq Mode");
     
     
     //Set Collection Names and Make Visible
+    float collectionFontProportion = 0.8f;
+    float heightDelta = -2;
+    
     stretchControls.setCollectionTitle("Stretch");
-    stretchControls.title.setUnderlineHeightDelta(-5);
+    stretchControls.title.setUnderlineHeightDelta(heightDelta);
+    stretchControls.title.setFontSizeAsProportionOfSpace(collectionFontProportion);
     addAndMakeVisible(stretchControls);
     
     
     delayControls.setCollectionTitle("Delay");
-    delayControls.title.setUnderlineHeightDelta(-5);
+    delayControls.title.setUnderlineHeightDelta(heightDelta);
+    delayControls.title.setFontSizeAsProportionOfSpace(collectionFontProportion);
     addAndMakeVisible(delayControls);
     
     
     pitchControls.setCollectionTitle("Pitch Shift");
-    pitchControls.title.setUnderlineHeightDelta(-5);
+    pitchControls.title.setUnderlineHeightDelta(heightDelta);
+    pitchControls.title.setFontSizeAsProportionOfSpace(collectionFontProportion);
     addAndMakeVisible(pitchControls);
     
     blurControls.setCollectionTitle("Blur");
-    blurControls.title.setUnderlineHeightDelta(-5);
+    blurControls.title.setUnderlineHeightDelta(heightDelta);
+    blurControls.title.setFontSizeAsProportionOfSpace(collectionFontProportion);
     addAndMakeVisible(blurControls);
     
     gateControls.setCollectionTitle("Gate");
-    gateControls.title.setUnderlineHeightDelta(-5);
+    gateControls.title.setUnderlineHeightDelta(heightDelta);
+    gateControls.title.setFontSizeAsProportionOfSpace(collectionFontProportion);
     addAndMakeVisible(gateControls);
     
     //FFT Hangovers
@@ -152,14 +156,31 @@ void PVExperimentsAudioProcessorEditor::resized()
     int globalPadH = 35;
     int globalPadV = 15;
     int headerHeight = 90;
+    float fftComboWidthPercent = 0.2;
     
     auto bounds = getLocalBounds();
     bounds.reduce(globalPadH, globalPadV);
+    
+    int widthAfterPadding = bounds.getWidth();
     
     auto header = bounds.removeFromTop(headerHeight);
     
     title.padding_sides = 7.0f;
     title.padding_bottom = 5.0f;
+    
+    auto fftComboBounds = header.removeFromRight(fftComboWidthPercent * widthAfterPadding);
+    fftSizeMenu.setBounds(fftComboBounds);
+    
+    juce::FlexBox fb_header;
+    
+    fb_header.flexDirection = juce::FlexBox::Direction::column;
+    
+    fb_header.items.add(juce::FlexItem(fftSizeLabel).withFlex(1.0f));
+    fb_header.items.add(juce::FlexItem(fftSizeMenu).withFlex(2.0f));
+    
+    fb_header.performLayout(fftComboBounds.toFloat());
+    
+    
     title.setFontSizeAsProportionOfSpace(0.8);
     title.setBounds(header);
     
@@ -168,9 +189,9 @@ void PVExperimentsAudioProcessorEditor::resized()
     juce::FlexBox fb;
     fb.flexDirection = juce::FlexBox::Direction::row;
 //    fb.justifyContent = juce::FlexBox::JustifyContent::spaceBetween;
-    fb.alignItems = juce::FlexBox::AlignItems::stretch;
+//    fb.alignItems = juce::FlexBox::AlignItems::stretch;
 
-    float gap = 0.0f; // adjust to taste
+    float gap = 15.0f; // adjust to taste
 
     fb.items.add(juce::FlexItem(stretchControls).withFlex(2.0f).withMargin({ gap, 0.0f, gap, gap }));
     fb.items.add(juce::FlexItem(pitchControls)  .withFlex(1.9f).withMargin(gap));

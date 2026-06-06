@@ -114,6 +114,8 @@ private:
 
 
 
+
+
 class TitleWithUnderline : public juce::Component
 {
 public:
@@ -141,7 +143,6 @@ private:
     
     juce::Rectangle<int> m_titleBounds;
 };
-
 
 
 
