@@ -158,6 +158,7 @@ void PVExperimentsAudioProcessorEditor::resized()
     int headerHeight = 90;
     float fftComboWidthPercent = 0.13;
     
+    
     auto bounds = getLocalBounds();
     bounds.reduce(globalPadH, globalPadV);
     
@@ -179,7 +180,7 @@ void PVExperimentsAudioProcessorEditor::resized()
     
     fb_header.flexDirection = juce::FlexBox::Direction::column;
     
-    fb_header.items.add(juce::FlexItem(fftSizeLabel).withFlex(1.4f));
+    fb_header.items.add(juce::FlexItem(fftSizeLabel).withFlex(1.7f));
     fb_header.items.add(juce::FlexItem(fftSizeMenu).withFlex(2.0f));
     
     fb_header.performLayout(fftComboBounds.toFloat());

@@ -32,29 +32,32 @@ MyLookAndFeel::MyLookAndFeel()
     setColour(juce::PopupMenu::highlightedBackgroundColourId, MyColours::accentC);
     setColour(juce::PopupMenu::highlightedTextColourId,       MyColours::creamColour);
     
+    setColour(juce::TextButton::buttonColourId, MyColours::accentA);
+    setColour(juce::TextButton::buttonOnColourId, MyColours::buttonRed);
     
-    jassert(myFont != nullptr);
-    DBG("Font loaded: " << myFont->getName());
+    
 }
 
 void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPosProportional, float rotaryStartAngle, float rotaryEndAngle, juce::Slider &slider)
 {
     auto size = juce::jmin(width, height);
-    auto bounds = juce::Rectangle<float>(x, y, width, height).withSizeKeepingCentre(size, size);
+    float outlineThickness = 1.0f;
+    
+    auto bounds = juce::Rectangle<float>(x, y, width, height).withSizeKeepingCentre(size, size).reduced(outlineThickness, outlineThickness);
     auto centre = bounds.getCentre();
     auto radius = bounds.getWidth() / 2.0f;
-
     
     
-    // background circle
-    auto backgroundColor = juce::Colours::black;
+    auto fillColour = MyColours::accentC;
+    auto outlineColour = MyColours::accentD;
+    auto indicatorColour = MyColours::accentA;
     
-    g.setColour(backgroundColor);
+    g.setColour(fillColour);
     g.fillEllipse(bounds);
 
-    // outer ring
-    g.setColour(MyColours::accentB);
-    g.drawEllipse(bounds, 1.0f);
+    // outline
+    g.setColour(outlineColour);
+    g.drawEllipse(bounds, outlineThickness);
 
     // line indicator
     auto angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
@@ -63,9 +66,33 @@ void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width,
     juce::Point<float> lineStart = centre.getPointOnCircumference(radius - lineLength, angle);
     juce::Point<float> lineEnd   = centre.getPointOnCircumference(radius, angle);
 
-    g.setColour(juce::Colours::white);
+    g.setColour(indicatorColour);;
     g.drawLine({ lineStart, lineEnd },3.0f);
     
+}
+
+
+void MyLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button &button, const juce::Colour &backgroundColour, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    auto bounds = button.getLocalBounds().toFloat().reduced(2.0f); // inset so outline isn't clipped
+    auto size = juce::jmin(bounds.getWidth(), bounds.getHeight());
+    auto circle = bounds.withSizeKeepingCentre(size, size);
+
+    bool isOn = button.getToggleState();
+    
+    auto buttonStrokeSize = juce::jmap(size, 20.0f, 200.0f, 1.0f, 6.0f);
+    
+    auto onColour = button.findColour(juce::TextButton::buttonOnColourId).withAlpha(0.2f);
+
+    // body
+    g.setColour(isOn ? onColour : backgroundColour);
+    g.fillEllipse(circle);
+    
+    
+    // outline
+    g.setColour(MyColours::accentD);
+    g.drawEllipse(circle, buttonStrokeSize);
+
 }
 
 juce::Font MyLookAndFeel::getLabelFont(juce::Label& label)

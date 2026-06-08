@@ -22,6 +22,8 @@ const juce::Colour accentB  { 0xFFA39D91 };
 const juce::Colour accentC  { 0xFF7A766D };
 const juce::Colour accentD  { 0xFF524F49 };
 
+const juce::Colour buttonRed {0xFFF00A00 };
+
 const juce::Colour darkBlueColour { 0xFF212842 };
 }
 
@@ -41,6 +43,12 @@ public:
                           float rotaryEndAngle,
                           juce::Slider & ) override;
     
+    
+    void drawButtonBackground    (    juce::Graphics &    ,
+    juce::Button &    ,
+    const juce::Colour &    backgroundColour,
+    bool    shouldDrawButtonAsHighlighted,
+                                  bool    shouldDrawButtonAsDown ) override;
     
     juce::Font getLabelFont(juce::Label& label) override;
     juce::Font getComboBoxFont(juce::ComboBox& comboBox) override;
