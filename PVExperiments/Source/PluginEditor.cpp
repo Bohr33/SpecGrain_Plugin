@@ -134,7 +134,7 @@ PVExperimentsAudioProcessorEditor::PVExperimentsAudioProcessorEditor (PVExperime
     setLookAndFeel(&myLookAndFeel);
     
     setResizable(true, true);
-    setSize (1000, 312.5);
+    setSize (1200, 400);
 }
 
 PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
@@ -146,7 +146,7 @@ PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
 void PVExperimentsAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll(MyColours::creamColour);
+    g.fillAll(MyColours::backgroundColour);
 }
 
 void PVExperimentsAudioProcessorEditor::resized()
