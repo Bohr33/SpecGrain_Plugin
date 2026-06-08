@@ -146,7 +146,7 @@ PVExperimentsAudioProcessorEditor::~PVExperimentsAudioProcessorEditor()
 void PVExperimentsAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll(MyColours::background);
+    g.fillAll(MyColours::creamColour);
 }
 
 void PVExperimentsAudioProcessorEditor::resized()
@@ -156,7 +156,7 @@ void PVExperimentsAudioProcessorEditor::resized()
     int globalPadH = 35;
     int globalPadV = 15;
     int headerHeight = 90;
-    float fftComboWidthPercent = 0.2;
+    float fftComboWidthPercent = 0.13;
     
     auto bounds = getLocalBounds();
     bounds.reduce(globalPadH, globalPadV);
@@ -171,11 +171,15 @@ void PVExperimentsAudioProcessorEditor::resized()
     auto fftComboBounds = header.removeFromRight(fftComboWidthPercent * widthAfterPadding);
     fftSizeMenu.setBounds(fftComboBounds);
     
+    int fftComboPaddingBottom = ( 1 - 0.7f) * fftComboBounds.getHeight();
+    
+    fftComboBounds.removeFromBottom(fftComboPaddingBottom);
+    
     juce::FlexBox fb_header;
     
     fb_header.flexDirection = juce::FlexBox::Direction::column;
     
-    fb_header.items.add(juce::FlexItem(fftSizeLabel).withFlex(1.0f));
+    fb_header.items.add(juce::FlexItem(fftSizeLabel).withFlex(1.4f));
     fb_header.items.add(juce::FlexItem(fftSizeMenu).withFlex(2.0f));
     
     fb_header.performLayout(fftComboBounds.toFloat());

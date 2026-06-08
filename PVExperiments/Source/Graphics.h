@@ -14,9 +14,14 @@
 
 namespace MyColours
 {
-const juce::Colour background   { 0xFFF0E7D5 };
-const juce::Colour accent1      { 0xFF000000 };
 const juce::Colour creamColour  { 0xFFF0E7D5 };
+const juce::Colour accent1      { 0xFF000000 }; //Black
+
+const juce::Colour accentA  { 0xFFCCC5B6 };
+const juce::Colour accentB  { 0xFFA39D91 };
+const juce::Colour accentC  { 0xFF7A766D };
+const juce::Colour accentD  { 0xFF524F49 };
+
 const juce::Colour darkBlueColour { 0xFF212842 };
 }
 

@@ -20,15 +20,17 @@ MyLookAndFeel::MyLookAndFeel()
     myFont = juce::Typeface::createSystemTypefaceFor(BinaryData::ZenMaruGothicLight_ttf, BinaryData::ZenMaruGothicLight_ttfSize);
     
     
-    setColour(juce::ComboBox::backgroundColourId, MyColours::accent1);
-    setColour(juce::ComboBox::textColourId, MyColours::background);
-    setColour(juce::ComboBox::outlineColourId, MyColours::accent1);
-    setColour(juce::ComboBox::arrowColourId, MyColours::background);
+    setColour(juce::Slider::backgroundColourId, MyColours::accentC);
     
-    setColour(juce::PopupMenu::backgroundColourId,            MyColours::accent1);
-    setColour(juce::PopupMenu::textColourId,                  MyColours::background);
-    setColour(juce::PopupMenu::highlightedBackgroundColourId, MyColours::background);
-    setColour(juce::PopupMenu::highlightedTextColourId,       MyColours::accent1);
+    setColour(juce::ComboBox::backgroundColourId, MyColours::accentA);
+    setColour(juce::ComboBox::textColourId, MyColours::accent1);
+    setColour(juce::ComboBox::outlineColourId, MyColours::accentB);
+    setColour(juce::ComboBox::arrowColourId, MyColours::accentD);
+    
+    setColour(juce::PopupMenu::backgroundColourId,            MyColours::accentA);
+    setColour(juce::PopupMenu::textColourId,                  MyColours::accent1);
+    setColour(juce::PopupMenu::highlightedBackgroundColourId, MyColours::accentC);
+    setColour(juce::PopupMenu::highlightedTextColourId,       MyColours::creamColour);
     
     
     jassert(myFont != nullptr);
@@ -45,13 +47,13 @@ void MyLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width,
     
     
     // background circle
-    auto backgroundColor = slider.findColour(juce::Slider::rotarySliderFillColourId);
+    auto backgroundColor = juce::Colours::black;
     
     g.setColour(backgroundColor);
     g.fillEllipse(bounds);
 
     // outer ring
-    g.setColour(juce::Colour(0xff444450));
+    g.setColour(MyColours::accentB);
     g.drawEllipse(bounds, 1.0f);
 
     // line indicator
