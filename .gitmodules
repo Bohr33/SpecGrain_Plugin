@@ -1,0 +1,3 @@
+[submodule "PVExperiments/JUCE"]
+	path = PVExperiments/JUCE
+	url = https://github.com/juce-framework/JUCE.git

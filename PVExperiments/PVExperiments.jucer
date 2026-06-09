@@ -9,28 +9,28 @@
             file="Rescources/ZenMaruGothic-Light.ttf"/>
     </GROUP>
     <GROUP id="{31CF6EEB-29C9-6A06-BBF6-253EC601B5D6}" name="Source">
-      <GROUP id="{D0478D3C-328B-3B7A-F2F0-C3C05A30B376}" name="Graphics">
-        <FILE id="vPsXu3" name="GUIComponents.cpp" compile="1" resource="0"
-              file="Source/GUIComponents.cpp"/>
-        <FILE id="o8hz6h" name="GUIComponents.h" compile="0" resource="0" file="Source/GUIComponents.h"/>
-        <FILE id="kxhpA2" name="Graphics.cpp" compile="1" resource="0" file="Source/Graphics.cpp"/>
-        <FILE id="U33mdU" name="Graphics.h" compile="0" resource="0" file="Source/Graphics.h"/>
+      <GROUP id="{A740A27A-0F22-7AF1-5377-91286AA43D1D}" name="GUI">
+        <FILE id="Q0piu2" name="Graphics.cpp" compile="1" resource="0" file="Source/GUI/Graphics.cpp"/>
+        <FILE id="o5jBH6" name="Graphics.h" compile="0" resource="0" file="Source/GUI/Graphics.h"/>
+        <FILE id="pExj1g" name="GUIComponents.cpp" compile="1" resource="0"
+              file="Source/GUI/GUIComponents.cpp"/>
+        <FILE id="GmoGZD" name="GUIComponents.h" compile="0" resource="0" file="Source/GUI/GUIComponents.h"/>
       </GROUP>
-      <GROUP id="{4432F9C3-D904-5453-758D-51E9D2EFE2DA}" name="SpectralProcessing">
-        <FILE id="KjgGYD" name="Window.cpp" compile="1" resource="0" file="Source/Window.cpp"/>
-        <FILE id="zII8XU" name="Window.h" compile="0" resource="0" file="Source/Window.h"/>
-        <FILE id="M2r4pA" name="PhaseVocoder.cpp" compile="1" resource="0"
-              file="Source/PhaseVocoder.cpp"/>
-        <FILE id="GALdin" name="PhaseVocoderEngine.cpp" compile="1" resource="0"
-              file="Source/PhaseVocoderEngine.cpp"/>
-        <FILE id="kFUKHU" name="PhaseVocoderEngine.h" compile="0" resource="0"
-              file="Source/PhaseVocoderEngine.h"/>
-        <FILE id="KaPq7t" name="PhaseVocoder.h" compile="0" resource="0" file="Source/PhaseVocoder.h"/>
-        <FILE id="A281dW" name="SpectralProcessors.cpp" compile="1" resource="0"
-              file="Source/SpectralProcessors.cpp"/>
-        <FILE id="slEl4Y" name="SpectralProcessors.hpp" compile="0" resource="0"
-              file="Source/SpectralProcessors.hpp"/>
-        <FILE id="n17ZgV" name="Fsig.h" compile="0" resource="0" file="Source/Fsig.h"/>
+      <GROUP id="{DE8CD85A-BD45-CF54-32FA-613C14015DE9}" name="DSP">
+        <FILE id="nLO71v" name="Fsig.h" compile="0" resource="0" file="Source/DSP/Fsig.h"/>
+        <FILE id="PbDMfk" name="PhaseVocoder.cpp" compile="1" resource="0"
+              file="Source/DSP/PhaseVocoder.cpp"/>
+        <FILE id="xqgvc6" name="PhaseVocoder.h" compile="0" resource="0" file="Source/DSP/PhaseVocoder.h"/>
+        <FILE id="KjeTHk" name="PhaseVocoderEngine.cpp" compile="1" resource="0"
+              file="Source/DSP/PhaseVocoderEngine.cpp"/>
+        <FILE id="fkzcJV" name="PhaseVocoderEngine.h" compile="0" resource="0"
+              file="Source/DSP/PhaseVocoderEngine.h"/>
+        <FILE id="efBrpt" name="SpectralProcessors.cpp" compile="1" resource="0"
+              file="Source/DSP/SpectralProcessors.cpp"/>
+        <FILE id="O91ArB" name="SpectralProcessors.hpp" compile="0" resource="0"
+              file="Source/DSP/SpectralProcessors.hpp"/>
+        <FILE id="iaTilV" name="Window.cpp" compile="1" resource="0" file="Source/DSP/Window.cpp"/>
+        <FILE id="imjPhz" name="Window.h" compile="0" resource="0" file="Source/DSP/Window.h"/>
       </GROUP>
       <FILE id="uM5pL8" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>

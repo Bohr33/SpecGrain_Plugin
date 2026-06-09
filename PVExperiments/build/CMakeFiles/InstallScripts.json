@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/benward_1/repos/Plugins/PVExperiments/PVExperiments/build/cmake_install.cmake",
+		"/Users/benward_1/repos/Plugins/PVExperiments/PVExperiments/build/JUCE/cmake_install.cmake",
+		"/Users/benward_1/repos/Plugins/PVExperiments/PVExperiments/build/JUCE/modules/cmake_install.cmake",
+		"/Users/benward_1/repos/Plugins/PVExperiments/PVExperiments/build/JUCE/extras/Build/cmake_install.cmake",
+		"/Users/benward_1/repos/Plugins/PVExperiments/PVExperiments/build/JUCE/extras/Build/juceaide/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
