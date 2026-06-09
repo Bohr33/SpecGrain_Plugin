@@ -2,6 +2,25 @@
 
 A VST/AU plugin built with the JUCE framework. Originally intended as a phase vocoder implementation, the project grew into a small spectral processing framework incorporating several experimental effects.
 
+
+## Building
+
+Clone the repository with submodules:
+```
+git clone --recursive https://github.com/Bohr33/PVExperiements```
+
+Configure and build:
+```
+cmake -B build
+cmake --build build --config Release
+```
+
+Built plugin artifacts will be located in `build/PVExperiments_artefacts/Release/`.
+
+### Formats
+- **VST3** — compatible with most DAWs
+- **AU** — macOS only
+
 ## Effects
 
 Audio is processed through five stages in series:
@@ -10,8 +29,8 @@ Audio is processed through five stages in series:
 
 | Effect | Description |
 |---|---|
-| Pitch Shift | Standard phase vocoder pitch shifting |
 | Spectral Stretch | Granular-style effect that holds a buffer of spectral frames and reads through them at a variable density, producing smearing and textural artifacts |
+| Pitch Shift | Standard phase vocoder pitch shifting |
 | Gate | Zeros any spectral bin below an amplitude threshold, used to suppress noise introduced by the other effects |
 | Spectral Delay | Delays spectral frames in time, with an optional mode that delays frequency values alongside amplitude values |
 | Spectral Blur | Averages spectral frames over a set window to blur the frequency content |
@@ -54,4 +73,4 @@ Parameters are declared in a `juce::AudioProcessorValueTreeState` in the process
 
 ## Performance notes
 
-CPU usage is significant, particularly for stereo processing at a buffer size of 512 with the stretch and blur effects active. Both effects require reading through large numbers of `Fsig` frames per output frame and are the primary bottleneck.
+CPU usage is significant, particularly for stereo processing and large FFT sizes. I've only had real buffering issues with FFT size = 2048, and with the blur and stretch parameters using high parameters. These effects use Fsig buffers for processing, and the higher parameter values necessitate processing more buffers per processing block.
