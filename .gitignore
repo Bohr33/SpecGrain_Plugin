@@ -1,4 +1,3 @@
-Builds/
-JuceLibraryCode/
-Resources/SpecGrain/
 .DS_Store
+JUCE/
+build/
