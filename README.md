@@ -2,6 +2,8 @@
 
 A VST/AU plugin built with the JUCE framework. Originally intended as a phase vocoder implementation, the project grew into a small spectral processing framework incorporating several experimental effects.
 
+![PVExperiments](extras/PVExperiments_Screenshot.png)
+
 
 ## Building
 
