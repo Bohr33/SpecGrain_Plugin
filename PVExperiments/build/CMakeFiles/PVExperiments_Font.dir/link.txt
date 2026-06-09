@@ -1,2 +1,0 @@
-/usr/bin/ar qc libPVExperiments_Font.a CMakeFiles/PVExperiments_Font.dir/juce_binarydata_PVExperiments_Font/JuceLibraryCode/BinaryData1.cpp.o
-/usr/bin/ranlib libPVExperiments_Font.a
