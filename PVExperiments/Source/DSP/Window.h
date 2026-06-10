@@ -11,6 +11,7 @@
 #pragma once
 #include <stdio.h>
 #include <vector>
+#include <cmath>
 #include <numbers>
 
 constexpr float twoPi = 6.28318530717958647692f;

@@ -32,7 +32,7 @@ void PhaseVocoder::prepare(size_t newBlockSize, size_t newFftSize)
     
     
     auto fftOrder = std::log2(fftSize);
-    fftObject = std::make_unique<juce::dsp::FFT>(fftOrder);
+    fftObject = std::make_unique<juce::dsp::FFT>(static_cast<int>fftOrder);
     window = std::make_unique<Window>(fftSize);
     
     gainCompensation = calculateGainCompensation();
