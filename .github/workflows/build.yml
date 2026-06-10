@@ -1,0 +1,53 @@
+
+
+name: Build Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Zip artifacts
+        run: |
+          cd build/PVExperiments_artefacts/Release
+          zip -r PVExperiments-mac.zip VST3/ AU/
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/PVExperiments_artefacts/Release/PVExperiments-mac.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Zip artifacts
+        run: Compress-Archive -Path build/PVExperiments_artefacts/Release/VST3 -DestinationPath PVExperiments-windows.zip
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: PVExperiments-windows.zip
