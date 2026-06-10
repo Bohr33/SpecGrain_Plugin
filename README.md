@@ -28,15 +28,29 @@ Built plugin artifacts will be located in `build/PVExperiments_artefacts/Release
 
 Audio is processed through five stages in series:
 
-**Pitch Shift → Spectral Stretch → Gate → Spectral Delay → Spectral Blur**
+** Spectral Stretch → Pitch Shift → Gate → Spectral Delay → Spectral Blur**
 
-| Effect | Description |
-|---|---|
-| Spectral Stretch | Granular-style effect that holds a buffer of spectral frames and reads through them at a variable density, producing smearing and textural artifacts |
-| Pitch Shift | Standard phase vocoder pitch shifting |
-| Gate | Zeros any spectral bin below an amplitude threshold, used to suppress noise introduced by the other effects |
-| Spectral Delay | Delays spectral frames in time, with an optional mode that delays frequency values alongside amplitude values |
-| Spectral Blur | Averages spectral frames over a set window to blur the frequency content |
+### Spectral Stretch
+This was an experiment after implementing the blur and delay effects. Both hold and process spectral frame buffers; stretch takes a similar approach but reads through the buffer based on a set length (TIME) and rate (DENSITY).
+
+### Pitch Shift
+This is a standard pitch shifting effect. It takes spectral frame buffers and uses the pitch shift value to scale the spectral frame buffers bin datas up or down.
+
+### Gate
+This was another experiment with the goal of eliminating some of the spectral noise. Applies a gate to spectral bin data, zeroing amplitude values below a set 
+threshold in each spectral frame. The result functions similarly to a 
+high-pass filter, attenuating low-amplitude spectral content across the buffer.
+
+### Spectral Delay
+Spectral Delay operates like a conventional delay, but processes spectral 
+frames rather than time-domain audio. By default, only amplitude bins are 
+delayed; enabling **Freq Toggle** extends the delay to the phase-difference 
+bins as well. Delaying amplitude bins alone produces a subtle timbral 
+difference compared to a standard delay, while enabling **Freq Toggle** 
+has a more pronounced and experimental effect on the output.
+
+### Spectral Blur
+Spectral Blur essentially smears the frequencies of the audio by holding the spectral frames in a buffer and averaging the values of both the amplitude and frequency bins. The blur amount is an arbitrary range dependedant on the max frame size, currently `300`. Because its dependant on the frame size only, the effect will change based on `FFTSize`.
 
 **Note:** If you want to change the effect processing order, simply rearrange the effect processing functions in the AudioProcessor `processBlock()` function.
 
@@ -52,13 +66,15 @@ Audio is processed through five stages in series:
 | Spectral Density | Density of frames played back during the **Spectral Time**| 0.0 - 1.0 |
 | Gate Amount | Amplitude threshold below which bin values are zeroed | 0.0 - 1.0 |
 | Delay Time | Spectral delay time in milliseconds | 1.0 - 2,000 ms |
-| Delay Amount | Gain mix of the spectral delay | 0.0 - 1.0 |
+| Delay Amount | Spectral delay output gain | 0.0 - 1.0 |
 | Feedback | Delay feedback amount (clamped to 0.99) | 0.0 - 0.99 |
+
+
 
 ### Additional controls
 
-- **FFT Size** — dropdown to select between three FFT sizes. Primarily included for testing, but smaller sizes can reduce latency. Also affects the timing of a few of the spectralProcessors that aren't knowledable of the sample rate.
-- **Frequency Delay Toggle** — when enabled, the delay is applied to both frequency and amplitude values rather than amplitude alone.
+- **FFT Size** — dropdown to select between three FFT sizes. Larger FFT Size performs a higher quality analysis, but at the cost of increased CPU usage.
+- **Frequency Delay Toggle** — when enabled, delay is also applied to the phase difference bins of the PV frames.
 
 ## Implementation
 
