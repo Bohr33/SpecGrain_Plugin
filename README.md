@@ -5,17 +5,27 @@ A VST/AU plugin built with the JUCE framework. Originally intended as a phase vo
 ![PVExperiments](extras/PVExperiments_Screenshot.png)
 
 
-## Building
+## Build Steps
 
-Clone the repository with submodules:
-```git clone --recursive https://github.com/Bohr33/PVExperiements```
+1. Clone the repository with submodules:
+``git clone --recursive https://github.com/Bohr33/PVExperiements``
 
-Configure and build:
 
+2.  Go into folder with source Files
+`` cd PVExperiments/PVExperiments ``
+
+3. Create and configure build folder
+``cmake -B build ``
+ 
+4. Build release version
+``cmake --build build --config Release``
+
+###Full Steps
 ```
-cmake -B build  
-cmake --build build --config Release
-
+git clone --recursive https://github.com/Bohr33/PVExperiements
+cd PVExperiments/PVExperiments
+cmake -B build
+cmake --build build --config Release 
 ```
 
 Built plugin artifacts will be located in `build/PVExperiments_artefacts/Release/`.
