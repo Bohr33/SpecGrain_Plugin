@@ -7,20 +7,20 @@ A VST/AU plugin built with the JUCE framework. Originally intended as a phase vo
 
 ## Build Steps
 
-1. Clone the repository with submodules:
+1. Clone the repository with submodules:<br>
 ``git clone --recursive https://github.com/Bohr33/PVExperiements``
 
 
-2.  Go into folder with source Files
+2.  Go into folder with source Files<br>
 `` cd PVExperiments/PVExperiments ``
 
-3. Create and configure build folder
+3. Create and configure build folder<br>
 ``cmake -B build ``
  
-4. Build release version
+4. Build release version<br>
 ``cmake --build build --config Release``
 
-###Full Steps
+### Full Steps
 ```
 git clone --recursive https://github.com/Bohr33/PVExperiements
 cd PVExperiments/PVExperiments
